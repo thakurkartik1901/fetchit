@@ -1,9 +1,9 @@
 import * as React from 'react';
 
-import { Buttons } from '@/components/buttons';
-import { Colors } from '@/components/colors';
-import { Inputs } from '@/components/inputs';
-import { Typography } from '@/components/typography';
+import { Buttons } from '@/components/showcase/buttons';
+import { Colors } from '@/components/showcase/colors';
+import { Inputs } from '@/components/showcase/inputs';
+import { Typography } from '@/components/showcase/typography';
 import { FocusAwareStatusBar, SafeAreaView, ScrollView } from '@/components/ui';
 
 export default function Style() {

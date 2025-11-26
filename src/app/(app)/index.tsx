@@ -3,7 +3,7 @@ import React from 'react';
 
 import type { Post } from '@/api';
 import { usePosts } from '@/api';
-import { Card } from '@/components/card';
+import { Card } from '@/components/feed/card';
 import { EmptyList, FocusAwareStatusBar, Text, View } from '@/components/ui';
 
 export default function Feed() {
