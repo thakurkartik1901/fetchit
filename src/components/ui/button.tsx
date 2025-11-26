@@ -20,23 +20,23 @@ const button = tv({
       },
       secondary: {
         container: 'bg-primary-600',
-        label: 'text-secondary-600',
+        label: 'text-white',
         indicator: 'text-white',
       },
       outline: {
-        container: 'border border-neutral-400',
-        label: 'text-black dark:text-neutral-100',
-        indicator: 'text-black dark:text-neutral-100',
+        container: 'border border-primary-600',
+        label: 'font-semibold text-primary-600',
+        indicator: 'text-primary-600',
       },
       destructive: {
-        container: 'bg-red-600',
+        container: 'bg-danger-500',
         label: 'text-white',
         indicator: 'text-white',
       },
       ghost: {
         container: 'bg-transparent',
-        label: 'text-black underline dark:text-white',
-        indicator: 'text-black dark:text-white',
+        label: 'text-primary-600',
+        indicator: 'text-primary-600',
       },
       link: {
         container: 'bg-transparent',
