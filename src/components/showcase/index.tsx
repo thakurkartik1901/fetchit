@@ -1,3 +1,4 @@
+export * from './accordions';
 export * from './badges';
 export * from './buttons';
 export * from './chip-selections';

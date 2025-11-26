@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import {
+  Accordions,
   Badges,
   Buttons,
   ChipSelections,
@@ -24,6 +25,7 @@ export default function Style() {
           <Badges />
           <Dividers />
           <ChipSelections />
+          <Accordions />
         </SafeAreaView>
       </ScrollView>
     </>
