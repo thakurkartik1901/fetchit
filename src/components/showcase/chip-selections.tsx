@@ -7,13 +7,16 @@ import { Title } from './title';
 
 export const ChipSelections = () => {
   const options = [
-    { label: 'Option 1', value: 'option1' },
-    { label: 'Option 2', value: 'option2' },
-    { label: 'Option 3', value: 'option3' },
-    { label: 'Option 4', value: 'option4' },
-    { label: 'Option 5', value: 'option5' },
-    { label: 'Option 6', value: 'option6' },
-    { label: 'Option 7', value: 'option7' },
+    { label: 'ALL EVENTS', value: 'option1' },
+    { label: 'IN PERSON', value: 'option2' },
+    { label: 'TECHNOLOGY', value: 'option3' },
+    { label: 'ART & DESIGN', value: 'option4' },
+    { label: 'FOOD & DRINK', value: 'option5' },
+    { label: 'HEALTH & FITNESS', value: 'option6' },
+    { label: 'MUSIC', value: 'option7' },
+    { label: 'SPORTS', value: 'option8' },
+    { label: 'TRAVEL', value: 'option9' },
+    { label: 'OTHER', value: 'option10' },
   ];
   const [singleValue, setSingleValue] = React.useState<string | null>(null);
   const [multipleValue, setMultipleValue] = React.useState<string[]>([]);

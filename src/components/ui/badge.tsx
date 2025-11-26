@@ -10,7 +10,7 @@ import { Text } from './text';
 const badge = tv({
   slots: {
     container: 'items-center justify-center rounded-full',
-    label: 'text-center font-inter font-semibold',
+    label: 'text-center font-inter-semibold',
   },
   variants: {
     variant: {

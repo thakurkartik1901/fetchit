@@ -10,7 +10,7 @@ const chip = tv({
   slots: {
     container: '',
     chip: 'items-center justify-center rounded-full px-5 py-2.5',
-    label: 'font-inter text-sm font-semibold uppercase tracking-wide',
+    label: 'font-inter-semibold text-sm uppercase tracking-wide',
   },
   variants: {
     layout: {
