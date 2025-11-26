@@ -3,6 +3,7 @@ import * as React from 'react';
 import {
   Badges,
   Buttons,
+  ChipSelections,
   Colors,
   Dividers,
   Inputs,
@@ -22,6 +23,7 @@ export default function Style() {
           <Inputs />
           <Badges />
           <Dividers />
+          <ChipSelections />
         </SafeAreaView>
       </ScrollView>
     </>
