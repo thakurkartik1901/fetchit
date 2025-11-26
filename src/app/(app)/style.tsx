@@ -4,6 +4,7 @@ import {
   Badges,
   Buttons,
   Colors,
+  Dividers,
   Inputs,
   Typography,
 } from '@/components/showcase';
@@ -20,6 +21,7 @@ export default function Style() {
           <Buttons />
           <Inputs />
           <Badges />
+          <Dividers />
         </SafeAreaView>
       </ScrollView>
     </>
