@@ -23,7 +23,7 @@ const inputTv = tv({
     container: 'mb-2',
     label: 'text-grey-100 mb-1 text-base dark:text-neutral-100',
     input:
-      'mt-0 rounded-xl border border-neutral-300 px-4 py-3 font-inter text-base  font-medium leading-5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white',
+      'mt-0 rounded-xl border border-neutral-300 px-4 py-3 font-inter-medium text-base leading-5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white',
   },
 
   variants: {

@@ -27,7 +27,7 @@ export default function Settings() {
 
       <ScrollView>
         <View className="flex-1 px-4 pt-16 ">
-          <Text className="text-xl font-bold">
+          <Text className="text-xl font-inter-bold">
             {translate('settings.title')}
           </Text>
           <ItemsContainer title="settings.generale">

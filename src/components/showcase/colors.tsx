@@ -21,7 +21,7 @@ const Color = ({ name }: { name: ColorName }) => {
   if (typeof colors[name] === 'string') return null;
   return (
     <View className="pt-2">
-      <Text className="font-medium">{name.toUpperCase()}</Text>
+      <Text className="font-inter-medium">{name.toUpperCase()}</Text>
       <View className="flex-row flex-wrap content-between justify-around ">
         {Object.entries(colors[name]).map(([key, value]) => {
           return (
