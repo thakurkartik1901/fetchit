@@ -1,4 +1,3 @@
-/* eslint-disable react/react-in-jsx-scope */
 import { Env } from '@env';
 import { useColorScheme } from 'nativewind';
 
@@ -14,7 +13,8 @@ import {
   View,
 } from '@/components/ui';
 import { Github, Rate, Share, Support, Website } from '@/components/ui/icons';
-import { translate, useAuth } from '@/lib';
+import { translate } from '@/lib/i18n';
+import { useAuth } from '@/store/auth';
 
 export default function Settings() {
   const signOut = useAuth.use.signOut();
@@ -27,7 +27,7 @@ export default function Settings() {
 
       <ScrollView>
         <View className="flex-1 px-4 pt-16 ">
-          <Text className="text-xl font-inter-bold">
+          <Text className="font-inter-bold text-xl">
             {translate('settings.title')}
           </Text>
           <ItemsContainer title="settings.generale">

@@ -4,7 +4,7 @@ import React from 'react';
 import type { LoginFormProps } from '@/components/auth/login-form';
 import { LoginForm } from '@/components/auth/login-form';
 import { FocusAwareStatusBar } from '@/components/ui';
-import { useAuth } from '@/lib';
+import { useAuth } from '@/store/auth';
 
 export default function Login() {
   const router = useRouter();
