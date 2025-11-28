@@ -1,17 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { Stack, useRouter } from 'expo-router';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
-import { showMessage } from 'react-native-flash-message';
 import { z } from 'zod';
 
-import { useAddPost } from '@/api';
-import {
-  Button,
-  ControlledInput,
-  showErrorMessage,
-  View,
-} from '@/components/ui';
+import { useAddPost, usePosts } from '@/api';
+import { Button, ControlledInput, View } from '@/components/ui';
+import { toast } from '@/lib/toast';
 
 const schema = z.object({
   title: z.string().min(10),
@@ -25,22 +21,20 @@ export default function AddPost() {
     resolver: zodResolver(schema),
   });
   const { mutate: addPost, isPending } = useAddPost();
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const onSubmit = (data: FormType) => {
-    console.log(data);
     addPost(
       { ...data, userId: 1 },
       {
         onSuccess: () => {
-          showMessage({
-            message: 'Post added successfully',
-            type: 'success',
-          });
-          // here you can navigate to the post list and refresh the list data
-          //queryClient.invalidateQueries(usePosts.getKey());
+          queryClient.invalidateQueries({ queryKey: usePosts.getKey() });
+          toast.success('Post added successfully');
+          router.back();
         },
-        onError: () => {
-          showErrorMessage('Error adding post');
+        onError: (error) => {
+          toast.fromHttpError(error);
         },
       }
     );

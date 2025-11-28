@@ -80,7 +80,9 @@ const client = z.object({
   VERSION: z.string(),
 
   // ADD YOUR CLIENT ENV VARS HERE
-  API_URL: z.string(),
+  EXPO_PUBLIC_API_URL: z.string().url(),
+  EXPO_PUBLIC_API_KEY: z.string().optional(),
+  API_URL: z.string(), // Keep temporarily for backward compatibility
   VAR_NUMBER: z.number(),
   VAR_BOOL: z.boolean(),
 });
@@ -104,7 +106,9 @@ const _clientEnv = {
   VERSION: packageJSON.version,
 
   // ADD YOUR ENV VARS HERE TOO
-  API_URL: process.env.API_URL,
+  EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL || process.env.API_URL,
+  EXPO_PUBLIC_API_KEY: process.env.EXPO_PUBLIC_API_KEY || '',
+  API_URL: process.env.API_URL, // Keep for backward compatibility
   VAR_NUMBER: Number(process.env.VAR_NUMBER),
   VAR_BOOL: process.env.VAR_BOOL === 'true',
 };

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { createSelectors } from '../utils';
+import { createSelectors } from '../../lib/utils';
 import type { TokenType } from './utils';
 import { getToken, removeToken, setToken } from './utils';
 
@@ -10,6 +10,7 @@ interface AuthState {
   signIn: (data: TokenType) => void;
   signOut: () => void;
   hydrate: () => void;
+  getAccessToken: () => string | null;
 }
 
 const _useAuth = create<AuthState>((set, get) => ({
@@ -38,6 +39,10 @@ const _useAuth = create<AuthState>((set, get) => ({
       // Maybe sign_out user!
     }
   },
+  getAccessToken: () => {
+    const state = get();
+    return state.token?.access ?? null;
+  },
 }));
 
 export const useAuth = createSelectors(_useAuth);
@@ -45,3 +50,4 @@ export const useAuth = createSelectors(_useAuth);
 export const signOut = () => _useAuth.getState().signOut();
 export const signIn = (token: TokenType) => _useAuth.getState().signIn(token);
 export const hydrateAuth = () => _useAuth.getState().hydrate();
+export const getAccessToken = () => _useAuth.getState().getAccessToken();
