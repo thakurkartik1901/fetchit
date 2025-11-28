@@ -16,10 +16,10 @@ import { tv } from 'tailwind-variants';
 
 import { CaretDown } from '@/components/ui/icons';
 
+import { Modal, useModal } from '../extended/modal';
+import { colors } from '../tokens';
 import type { InputControllerType } from './input';
-import { Modal, useModal } from './modal';
 import { Text } from './text';
-import { colors } from './tokens';
 
 const selectTv = tv({
   slots: {
@@ -209,7 +209,7 @@ export const Select = (props: SelectProps) => {
         {error && (
           <Text
             testID={`${testID}-error`}
-            className="text-danger-300 dark:text-danger-600 text-sm"
+            className="text-sm text-danger-300 dark:text-danger-600"
           >
             {error}
           </Text>

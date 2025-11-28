@@ -5,12 +5,12 @@ import Svg, { Path } from 'react-native-svg';
 import type { VariantProps } from 'tailwind-variants';
 import { tv } from 'tailwind-variants';
 
-import { Text } from './text';
+import { Text } from '../core/text';
 
 const badge = tv({
   slots: {
     container: 'items-center justify-center rounded-full',
-    label: 'font-inter-semibold text-center',
+    label: 'text-center font-inter-semibold',
   },
   variants: {
     variant: {

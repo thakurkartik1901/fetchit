@@ -4,7 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import type { VariantProps } from 'tailwind-variants';
 import { tv } from 'tailwind-variants';
 
-import { Text } from './text';
+import { Text } from '../core/text';
 
 const chip = tv({
   slots: {

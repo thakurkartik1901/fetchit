@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import colors from '../tokens/colors';
 import { Text } from './text';
-import colors from './tokens/colors';
 
 const SIZE = 20;
 const WIDTH = 50;
@@ -158,7 +158,7 @@ export const RadioIcon = ({ checked = false }: IconProps) => {
       transition={{ borderColor: { duration: 100, type: 'timing' } }}
     >
       <MotiView
-        className={`size-[10px] rounded-[10px] ${checked && 'bg-primary-300'} `}
+        className={`size-2.5 rounded-[10px] ${checked && 'bg-primary-300'} `}
         from={{ opacity: 0 }}
         animate={{ opacity: checked ? 1 : 0 }}
         transition={{ opacity: { duration: 50, type: 'timing' } }}

@@ -9,8 +9,8 @@ import Animated, {
 import type { VariantProps } from 'tailwind-variants';
 import { tv } from 'tailwind-variants';
 
-import { CaretDown } from './icons';
-import { Text } from './text';
+import { Text } from '../core/text';
+import { CaretDown } from '../icons';
 
 const accordion = tv({
   slots: {

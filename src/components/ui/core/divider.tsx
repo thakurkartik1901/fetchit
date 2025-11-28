@@ -78,7 +78,7 @@ const divider = tv({
       orientation: 'horizontal',
       thickness: 'thick',
       class: {
-        line: 'h-[2px]',
+        line: 'h-0.5',
       },
     },
     // Vertical thickness variants
@@ -100,7 +100,7 @@ const divider = tv({
       orientation: 'vertical',
       thickness: 'thick',
       class: {
-        line: 'w-[2px]',
+        line: 'w-0.5',
       },
     },
   ],

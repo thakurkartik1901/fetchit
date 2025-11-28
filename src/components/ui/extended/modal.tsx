@@ -38,7 +38,7 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
 
-import { Text } from './text';
+import { Text } from '../core/text';
 
 type ModalProps = BottomSheetModalProps & {
   title?: string;
@@ -160,9 +160,9 @@ const ModalHeader = React.memo(({ title, dismiss }: ModalHeaderProps) => {
     <>
       {title && (
         <View className="flex-row px-2 py-4">
-          <View className="size-[24px]" />
+          <View className="size-6" />
           <View className="flex-1">
-            <Text className="text-center text-[16px] font-inter-bold text-[#26313D] dark:text-white">
+            <Text className="text-center font-inter-bold text-[16px] text-[#26313D] dark:text-white">
               {title}
             </Text>
           </View>
@@ -177,7 +177,7 @@ const CloseButton = ({ close }: { close: () => void }) => {
   return (
     <Pressable
       onPress={close}
-      className="absolute right-3 top-3 size-[24px] items-center justify-center "
+      className="absolute right-3 top-3 size-6 items-center justify-center "
       hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       accessibilityLabel="close modal"
       accessibilityRole="button"

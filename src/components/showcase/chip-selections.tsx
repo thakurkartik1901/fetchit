@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { ChipSelection, Divider, View } from '@/components/ui';
-import { Text } from '@/components/ui/text';
+import { Text } from '@/components/ui/core/text';
 
 import { Title } from './title';
 

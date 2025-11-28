@@ -15,15 +15,15 @@ import {
 } from 'react-native';
 import { tv } from 'tailwind-variants';
 
+import colors from '../tokens/colors';
 import { Text } from './text';
-import colors from './tokens/colors';
 
 const inputTv = tv({
   slots: {
     container: 'mb-2',
     label: 'text-grey-100 mb-1 text-base dark:text-neutral-100',
     input:
-      'font-inter-medium mt-0 rounded-xl border border-neutral-300 px-4 py-3 text-base leading-5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white',
+      'mt-0 rounded-xl border border-neutral-300 px-4 py-3 font-inter-medium text-base leading-5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white',
   },
 
   variants: {
@@ -118,7 +118,7 @@ export const Input = React.forwardRef<NTextInput, NInputProps>((props, ref) => {
       {error && (
         <Text
           testID={testID ? `${testID}-error` : undefined}
-          className="text-danger-400 dark:text-danger-600 text-sm"
+          className="text-sm text-danger-400 dark:text-danger-600"
         >
           {error}
         </Text>

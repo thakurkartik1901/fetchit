@@ -1,7 +1,7 @@
 const colors = require('./src/components/ui/tokens/colors');
 const spacing = require('./src/components/ui/tokens/spacing');
 const fontSize = require('./src/components/ui/tokens/font-size');
-const fontFamily = require('./src/components/ui/tokens/fonts');
+const fontFamily = require('./src/components/ui/tokens/font-family');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {

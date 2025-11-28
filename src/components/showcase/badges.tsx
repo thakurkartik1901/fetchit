@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { View } from '../ui';
-import { Badge } from '../ui/badge';
+import { Badge } from '../ui/extended/badge';
 import { Rate } from '../ui/icons/rate';
 import { Title } from './title';
 
