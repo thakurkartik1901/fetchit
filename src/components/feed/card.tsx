@@ -28,8 +28,11 @@ export const Card = ({ title, body, id }: Props) => {
           />
 
           <View className="p-2">
-            <Text className="py-3 text-2xl ">{title}</Text>
-            <Text numberOfLines={3} className="leading-snug text-gray-600">
+            <Text className="py-3 text-xl ">{title}</Text>
+            <Text
+              numberOfLines={3}
+              className="text-md leading-snug text-gray-600"
+            >
               {body}
             </Text>
           </View>

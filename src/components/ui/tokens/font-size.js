@@ -1,6 +1,8 @@
 module.exports = {
-  xs: 12,
-  sm: 14,
+  '2xs': 8,
+  xs: 10,
+  sm: 12,
+  md: 14,
   base: 16,
   lg: 18,
   xl: 20,

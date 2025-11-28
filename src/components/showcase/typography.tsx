@@ -21,6 +21,9 @@ export const Typography = () => {
           dolorem sunt temporibus iusto consequatur culpa. Omnis sequi debitis
           recusandae?
         </Text>
+        <Text className="text-md">Body: Lorem ipsum dolor sit</Text>
+        <Text className="text-sm">Body: Lorem ipsum dolor sit</Text>
+        <Text className="text-2xs ">Caption: Lorem ipsum dolor sit</Text>
       </View>
     </>
   );
