@@ -1,13 +1,19 @@
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
-import { createQuery } from 'react-query-kit';
 
 import { PostsRepository } from '../repository';
 import type { Post } from '../types';
 
 type Response = Post[];
-type Variables = void; // as react-query-kit is strongly typed, we need to specify the type of the variables as void in case we don't need them
 
-export const usePosts = createQuery<Response, Variables, AxiosError>({
-  queryKey: ['posts'],
-  fetcher: () => PostsRepository.list(),
-});
+const QUERY_KEY = ['posts'] as const;
+
+export const usePosts = (): UseQueryResult<Response, AxiosError> => {
+  return useQuery<Response, AxiosError>({
+    queryKey: QUERY_KEY,
+    queryFn: () => PostsRepository.list(),
+  });
+};
+
+// Export query key for invalidation
+usePosts.queryKey = QUERY_KEY;

@@ -14,10 +14,7 @@ import {
 export default function Post() {
   const local = useLocalSearchParams<{ id: string }>();
 
-  const { data, isPending, isError } = usePost({
-    //@ts-ignore
-    variables: { id: local.id },
-  });
+  const { data, isPending, isError } = usePost(Number(local.id));
 
   if (isPending) {
     return (

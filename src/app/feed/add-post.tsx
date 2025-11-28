@@ -29,7 +29,7 @@ export default function AddPost() {
       { ...data, userId: 1 },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: usePosts.getKey() });
+          queryClient.invalidateQueries({ queryKey: usePosts.queryKey });
           toast.success('Post added successfully');
           router.back();
         },

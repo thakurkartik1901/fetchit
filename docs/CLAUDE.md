@@ -1,516 +1,1190 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working with this React Native e-commerce app (Expo, catalog, cart, orders, Paytm payments).
+Guidance for Claude Code when working with **FetchIt** - a React Native app for email sync and order tracking from multiple platforms.
 
 ## 🚨 Critical Rules
 
-1. **USE UI wrappers** - `<Card>`, `<Button>`, `<Text>` over raw React Native components
-2. **FOLLOW pattern** - Screen → Hook → Repository → Backend (never skip)
-3. **NEVER hardcode colors** - Use `Colors` from `@/theme/tokens` (JS) or NativeWind classes (JSX); prefer `anmasa-*`
-4. **NEVER use StyleSheet.create()** - NativeWind classes + inline styles for platform-specific only
-5. **Responsive design** - Use vh/vw for containers, avoid hardcoded heights except touch targets (36px min)
-6. **Check docs BEFORE coding** - Consult NativeWind, React Native, Expo docs, `docs/ARCHITECTURE.md`
+1. **USE UI wrappers** - `<Button>`, `<Input>`, `<Text>`, `<Card>`, `<Modal>` over raw React Native components
+2. **FOLLOW pattern** - Screen → Hook → Repository → Backend (never skip layers)
+3. **NEVER hardcode colors** - Use Tailwind classes (`bg-primary-600`, `text-danger-500`) or token imports for JS props
+4. **NEVER use StyleSheet.create()** - NativeWind classes only; inline styles ONLY for shadows/platform-specific
+5. **Responsive design** - Use responsive classes (`sm:`, `md:`, `lg:`); avoid hardcoded heights except touch targets (40px min)
+6. **Check docs BEFORE coding** - Consult NativeWind, React Native, Expo docs for platform differences
 
 ## Stack & Config
 
-**Framework**: Expo ~54.0, React Native 0.81.4, React 19.1.0
-**Routing**: Expo Router 6.0 (file-based, typed routes)
-**Styling**: NativeWind 4.2 (Tailwind for RN)
-**Experimental**: React Compiler, New Architecture enabled
+**Framework**: Expo ~53.0, React Native 0.79.4, React 19.0.0
+**Routing**: Expo Router 5.1 (file-based, typed routes)
+**Styling**: NativeWind 4.1 (Tailwind for RN)
+**State Management**: Zustand 5.0 (global), @tanstack/react-query 5.52 (server state)
 
 **Platform**:
 
-- Bundle ID: `com.anonymous.anmasaappv2`
-- Scheme: `anmasaappv2`
-- iOS: Tablet support
-- Android: Edge-to-edge, predictive back disabled
+- Bundle ID: `com.fetchit.{environment}` (development/staging/production)
+- Scheme: `fetchit`
+- iOS & Android support
+- Multi-environment builds (development, staging, production)
 
 ## Architecture
 
-**Routes**: `(tabs)` - main nav; `(auth)` - plp/pdp; `(onboarding)` - onboarding. Root: `src/app/_layout.tsx`
+**Routes**: `(app)` - main nav (feed, style, settings); `feed/` - feed details/add post; `login` - auth; `onboarding` - first launch
 
-**Features** (`src/features/`): catalog, order, auth, customer, address, paytm, location. Each has: `repository/`, `hooks/`, `components/`, `store.ts`, `validation/`
+**Root Layout**: `src/app/_layout.tsx` - Sets up global providers (API, Theme, GestureHandler, Keyboard, BottomSheet)
 
-**Global Stores** (`src/store/`): `location.store.tsx` (Context), `cart/theme/auth.store.ts` (Zustand-future)
+**Features** (`src/api/`): Each feature has: `repository.ts`, `types.ts`, `hooks/` (@tanstack/react-query)
 
-**State Strategy**: React Context (`.tsx`) for simple/app-level state; Zustand (`.ts`) for complex/cross-feature
+- **posts** - Feed/posts feature (list, detail, create)
+- **common** - Shared API utilities (client, http, errors)
 
-**Shared**: `src/lib/` (utils), `src/providers/` (QueryProvider, ThemeProvider), `src/components/ui/` (reusables), `src/components/layout/`, `src/theme/`
+**Global Stores** (`src/store/`): Zustand for app-level state
 
-**Path**: `@/*` → `./src/*`
+- **auth** - Authentication state, token management, sign-in/out
+
+**State Strategy**:
+
+- Zustand (`.tsx`) for global app state
+- @tanstack/react-query for all server data
+- React Hook Form + Zod for form state
+
+**Shared**:
+
+- `src/components/ui/` - Design system (core, extended, layout, icons, tokens)
+- `src/lib/` - Utilities (hooks, i18n, storage, animations, haptics, toast, logger)
+- `src/types/` - Global TypeScript types
+
+**Path Alias**: `@/*` → `./src/*`
 
 ## Styling
 
-**NativeWind First** (primary): Use `className` for layout, colors, spacing. Use `cn()` from `src/lib/cn.ts` for conditional classes.
+**NativeWind First** (primary): Use `className` for ALL styling. Use `twMerge()` for conditional classes.
 
-**Inline styles ONLY** for: Shadows (iOS/Android), platform-specific behaviors
+**Inline styles ONLY for**:
+
+- Shadows (iOS/Android differences)
+- Platform-specific behaviors (Platform.select)
 
 **Examples**:
 
 ```tsx
-// Layout with NativeWind
-<View className="p-4 bg-surface-subtle rounded-2xl border border-border" />
+// ✅ Correct - Layout with NativeWind
+<View className="flex-1 p-4 bg-white dark:bg-charcoal-900 rounded-2xl border border-neutral-300" />
 
-// Shadows require inline styles
-<View className="rounded-full bg-white px-4 py-3"
-  style={{ shadowColor: Colors.anmasa.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 3 }} />
+// ✅ Correct - Responsive design
+<View className="p-4 sm:p-6 md:p-8 w-full md:w-1/2 lg:w-1/3" />
 
-// JS props use Colors tokens
-<Icon color={Colors.text.body} />
-<LinearGradient colors={[Colors.anmasa.success, Colors.anmasa.green]} />
+// ✅ Correct - Conditional classes with twMerge
+<View className={twMerge('p-4 bg-white', isActive && 'bg-primary-50', className)} />
+
+// ✅ Correct - Shadows (inline styles required)
+<View
+  className="rounded-lg bg-white p-4"
+  style={{
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  }}
+/>
+
+// ❌ Wrong - StyleSheet.create
+const styles = StyleSheet.create({ container: { padding: 16 } }); // NEVER DO THIS
+
+// ❌ Wrong - Hardcoded colors
+<View style={{ backgroundColor: '#197dfd' }} /> // NEVER DO THIS
 ```
 
-**Color Rules**:
+**Color System** (Design Tokens):
 
-- JSX/className → NativeWind (`bg-brand-500`, `text-anmasa-green`, `border-border`)
-- JS props → `Colors.anmasa.*` (`Colors.anmasa.green`, `Colors.text.body`)
-- Prefer `anmasa-*` for brand, `text-*` for semantic
-- Available tokens: `text.*`, `anmasa.*`, `surface.*`, `border.*`, `category.*`
+**Tailwind Classes** (use in `className`):
+
+```tsx
+// Brand/Primary colors
+bg-primary-50 to bg-primary-900     // Blue brand colors
+text-primary-600, border-primary-600
+
+// Semantic colors
+bg-success-500, text-success-600    // Green success states
+bg-warning-500, text-warning-600    // Yellow/orange warnings
+bg-danger-500, text-danger-600      // Red errors/destructive actions
+bg-neutral-100 to bg-neutral-900    // Gray neutrals
+bg-charcoal-50 to bg-charcoal-950   // Dark grays (dark mode)
+
+// Special
+bg-white, bg-black, text-white, text-black
+```
+
+**JS Props** (when className not available):
+
+```tsx
+import colors from '@/components/ui/tokens/colors';
+
+// Usage
+<Icon color={colors.primary[600]} />
+<ActivityIndicator color={colors.primary[600]} />
+<LinearGradient colors={[colors.primary[500], colors.primary[700]]} />
+```
+
+**Color Usage Guidelines**:
+
+- **Primary (blue)**: Brand actions, CTAs, links, active states
+- **Success (green)**: Success messages, confirmations, positive actions
+- **Warning (yellow)**: Warnings, cautions, pending states
+- **Danger (red)**: Errors, destructive actions, critical alerts
+- **Neutral/Charcoal**: Text, borders, backgrounds, disabled states
+
+**Dark Mode**:
+
+```tsx
+// Use dark: prefix for dark mode variants
+<View className="bg-white dark:bg-charcoal-900 text-black dark:text-white" />
+<Text className="text-neutral-900 dark:text-neutral-50">Content</Text>
+```
 
 **Responsive Design**:
 
-- Containers: Use vh/vw (`h-[17vh]`, `w-full`)
-- Positioning: Bottom-relative (`bottom-4`), not fixed top values
-- DO hardcode: Touch targets (36px min), standard UI (search 48px)
-- DON'T hardcode: Container heights, widths (use `flex-1`, `left-X right-X`)
+**Breakpoints** (Mobile-first approach):
 
-**Docs**: `docs/DESIGN_TOKENS_GUIDE.md` (reference), `docs/design-tokens-usage.md` (enforcement)
+- `xs:` - 360px+ (small phones)
+- `sm:` - 414px+ (regular phones)
+- `md:` - 768px+ (tablets)
+- `lg:` - 1024px+ (large tablets)
+- `xl:` - 1280px+ (foldables, desktop)
+
+**Best Practices**:
+
+```tsx
+// ✅ Responsive spacing
+<View className="p-4 sm:p-6 md:p-8" />
+
+// ✅ Responsive layout
+<View className="flex-col sm:flex-row gap-4 sm:gap-6" />
+
+// ✅ Responsive widths (avoid hardcoded)
+<View className="w-full md:w-1/2 lg:w-1/3" />
+
+// ❌ Wrong - Hardcoded heights
+<View style={{ height: 300 }} />
+
+// ✅ Correct - Use flex or responsive values
+<View className="flex-1 min-h-[300px] sm:min-h-[400px]" />
+```
+
+**Touch Targets**: Minimum 40px (h-10) for all interactive elements
 
 ## State Management
 
-**Context** (`.tsx`): Simple, app-level, rare changes
+**Zustand** (Global App State):
 
-- File: `src/store/[name].store.tsx`
-- Use: Location, theme preferences
-- Pattern: `createContext` → `Provider` → custom hook
+**File**: `src/store/[feature]/index.tsx`
+**Use**: Auth, global UI state, user preferences
 
-**Zustand** (`.ts`): Complex, cross-feature, frequent updates
+**Pattern**:
 
-- File: `src/store/[name].store.ts` or `src/features/[feature]/store.ts`
-- Use: Cart, auth, complex state with middleware
-- Pattern: `create()` with actions and selectors
+```tsx
+// Define store
+import { create } from 'zustand';
 
-**React Query**: Server state (fetching, caching, syncing)
+type State = {
+  user: User | null;
+  setUser: (user: User) => void;
+  clearUser: () => void;
+};
 
-- Use: API data, background updates
-- Always pair with Repository pattern
+export const useUserStore = create<State>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+  clearUser: () => set({ user: null }),
+}));
+
+// Use in component
+const { user, setUser } = useUserStore();
+```
+
+**Zustand Best Practices**:
+
+- Use selectors for granular subscriptions: `useAuthStore((state) => state.token)`
+- Persist sensitive data (tokens) to MMKV storage
+- Hydrate on app startup (`_layout.tsx`)
+- Use middleware for logging/persistence
+
+**@tanstack/react-query** (Server State):
+
+**Always use with Repository pattern**: Screen → Hook → Repository → Backend
+
+**File**: `src/api/[feature]/hooks/use-[action].ts`
+
+**Query Pattern** (no variables):
+
+```tsx
+import type { AxiosError } from 'axios';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+
+import { PostsRepository } from '../repository';
+import type { Post } from '../types';
+
+type Response = Post[];
+
+const QUERY_KEY = ['posts'] as const;
+
+export const usePosts = (): UseQueryResult<Response, AxiosError> => {
+  return useQuery<Response, AxiosError>({
+    queryKey: QUERY_KEY,
+    queryFn: () => PostsRepository.list(),
+  });
+};
+
+// Export query key for invalidation
+usePosts.queryKey = QUERY_KEY;
+
+// Usage in component
+const { data, isPending, isError, refetch } = usePosts();
+```
+
+**Query Pattern** (with variables):
+
+```tsx
+import type { AxiosError } from 'axios';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+
+import { PostsRepository } from '../repository';
+import type { Post } from '../types';
+
+type Response = Post;
+
+export const usePost = (id: number): UseQueryResult<Response, AxiosError> => {
+  return useQuery<Response, AxiosError>({
+    queryKey: ['post', id] as const,
+    queryFn: () => PostsRepository.getById(id),
+  });
+};
+
+// Export query key factory for invalidation
+usePost.queryKey = (id: number) => ['post', id] as const;
+
+// Usage in component
+const { data, isPending, isError } = usePost(Number(id));
+```
+
+**Mutation Pattern**:
+
+```tsx
+import type { AxiosError } from 'axios';
+import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+
+import { PostsRepository } from '../repository';
+import type { CreatePostRequest, Post } from '../types';
+
+export const useAddPost = (): UseMutationResult<
+  Post,
+  AxiosError,
+  CreatePostRequest
+> => {
+  return useMutation<Post, AxiosError, CreatePostRequest>({
+    mutationFn: async (variables) => PostsRepository.create(variables),
+  });
+};
+
+// Usage in component
+import { useQueryClient } from '@tanstack/react-query';
+
+const { mutate: addPost, isPending } = useAddPost();
+const queryClient = useQueryClient();
+
+addPost(
+  { title: 'Post', body: 'Content', userId: 1 },
+  {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usePosts.queryKey });
+      toast.success('Post added');
+    },
+    onError: (error) => toast.fromHttpError(error),
+  }
+);
+```
+
+**@tanstack/react-query Config** (`src/api/common/client.tsx`):
+
+```tsx
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+  queries: {
+    staleTime: 1000 * 60 * 20,      // 20 minutes
+    gcTime: 1000 * 60 * 60,         // 60 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  },
+  mutations: {
+    retry: 0,
+  },
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      console.error('[React Query] Query Error:', { queryKey: query.queryKey, error });
+      toast.fromHttpError(error);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      console.error('[React Query] Mutation Error:', { mutationKey: mutation.options.mutationKey, error });
+      toast.fromHttpError(error);
+    },
+  }),
+});
+```
+
+**Local State**:
+
+- `useState` / `useReducer` for component-local state
+- React Hook Form for form state with Zod validation
 
 ## Repository Pattern (Critical!)
 
 **NEVER skip layers**: Screen → Hook → Repository → Backend
 
+**File Structure**:
+
+```
+src/api/
+├── common/
+│   ├── client.tsx      # React Query client
+│   ├── http.ts         # Axios instance + helpers
+│   ├── errors.ts       # Custom error classes
+│   └── error-utils.ts  # Error handling utilities
+└── [feature]/
+    ├── repository.ts   # Data access layer
+    ├── types.ts        # TypeScript types
+    └── hooks/          # React Query hooks
+        ├── use-[feature]s.ts    # List query
+        ├── use-[feature].ts     # Single item query
+        └── use-add-[feature].ts # Create mutation
+```
+
+**Repository Template**:
+
 ```tsx
-// Screen
-const { products } = useProducts();
+// src/api/posts/repository.ts
+import { apiGet, apiPost, apiPut, apiDelete } from '@/api/common/http';
+import type { Post, PostDTO, CreatePostRequest } from './types';
 
-// Hook
-function useProducts() {
-  return useQuery({
-    queryKey: ['products'],
-    queryFn: () => productRepo.getProducts(),
-  });
-}
+export const PostsRepository = {
+  async list(): Promise<Post[]> {
+    const data = await apiGet<PostDTO[]>('/posts');
+    return data.map(this.mapDTOToPost);
+  },
 
-// Repository
-const productRepo = {
-  async getProducts(): Promise<Product[]> {
-    const res = await axios.get<ProductDTO[]>('/api/products');
-    return res.data.map(this.mapToProduct);
+  async getById(id: number): Promise<Post> {
+    const data = await apiGet<PostDTO>(`/posts/${id}`);
+    return this.mapDTOToPost(data);
+  },
+
+  async create(request: CreatePostRequest): Promise<Post> {
+    const data = await apiPost<PostDTO>('/posts/add', request);
+    return this.mapDTOToPost(data);
+  },
+
+  async update(id: number, request: Partial<CreatePostRequest>): Promise<Post> {
+    const data = await apiPut<PostDTO>(`/posts/${id}`, request);
+    return this.mapDTOToPost(data);
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiDelete(`/posts/${id}`);
+  },
+
+  // DTO mapper - separates API shape from domain model
+  mapDTOToPost(dto: PostDTO): Post {
+    return {
+      id: dto.id,
+      userId: dto.userId,
+      title: dto.title,
+      body: dto.body,
+      // Transform API fields to app fields
+    };
   },
 };
 ```
 
-Why: Testability, flexibility, type safety, reusability. Full details: `docs/ARCHITECTURE.md`
+**HTTP Client** (`src/api/common/http.ts`):
+
+**Configuration**:
+
+```tsx
+const axiosInstance = axios.create({
+  baseURL: Env.EXPO_PUBLIC_API_URL,
+  timeout: 30000, // 30 seconds
+  headers: {
+    'Content-Type': 'application/json',
+    ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
+  },
+});
+```
+
+**Request Interceptor**: Automatically adds Bearer token from auth store
+
+**Response Interceptor**: Global 401 handling (auto sign-out)
+
+**Helper Functions**:
+
+```tsx
+apiGet<T>(path: string, config?: AxiosRequestConfig): Promise<T>
+apiPost<T>(path: string, body?: any, config?: AxiosRequestConfig): Promise<T>
+apiPut<T>(path: string, body?: any, config?: AxiosRequestConfig): Promise<T>
+apiPatch<T>(path: string, body?: any, config?: AxiosRequestConfig): Promise<T>
+apiDelete<T>(path: string, config?: AxiosRequestConfig): Promise<T>
+```
+
+**Error Handling**:
+
+**Custom Error Classes** (`src/api/common/errors.ts`):
+
+```tsx
+HttpTimeoutError; // Request timeout
+HttpNetworkError; // No internet/network issue
+HttpResponseError; // 4xx/5xx responses (includes status, data)
+HttpUnknownError; // Unexpected errors
+```
+
+**Global Error Handler** (`src/api/common/client.tsx`):
+
+```tsx
+queryCache: new QueryCache({
+  onError: (error, query) => {
+    console.error('[React Query] Query Error:', { queryKey: query.queryKey, error });
+    toast.fromHttpError(error); // Show toast to user
+  },
+}),
+mutationCache: new MutationCache({
+  onError: (error, _variables, _context, mutation) => {
+    console.error('[React Query] Mutation Error:', { mutationKey: mutation.options.mutationKey, error });
+    toast.fromHttpError(error);
+  },
+}),
+```
+
+**Toast Error Handler** (`src/lib/toast.ts`):
+
+```tsx
+toast.fromHttpError(error: unknown): void
+  - Displays user-friendly error messages
+  - Maps error types to appropriate toast messages
+  - Extracts server error messages when available
+```
+
+**Why Repository Pattern?**
+
+- **Testability**: Mock repositories instead of HTTP calls
+- **Flexibility**: Change API/backend without touching UI
+- **Type Safety**: DTO → Domain model transformation
+- **Reusability**: Share data access logic across hooks
+- **Single Source of Truth**: One place for API endpoints
 
 ## Component Patterns
 
-**BEFORE coding**: Check NativeWind, React Native, Expo docs (use context7 MCP tool). Understand platform differences, responsive utilities, performance considerations.
+**BEFORE coding**: Check NativeWind, React Native, Expo docs. Understand platform differences, responsive utilities, performance considerations.
 
-**Layout pattern** (`src/components/layout/`):
+### UI Component Library
 
-```tsx
-<View className="relative h-[17vh]">
-  <LinearGradient
-    colors={[Colors.anmasa.success, Colors.anmasa.green]}
-    className="absolute inset-x-0 top-0 h-full rounded-b-xl"
-  />
-  <StatusBar style="light" /> {/* dark bg → light text */}
-  <Pressable
-    className="absolute bottom-4 left-4 right-4"
-    style={{ shadowColor: Colors.anmasa.black, elevation: 3 }}
-  >
-    <Icon name="icon-name" color={Colors.text.body} />
-  </Pressable>
-</View>
-```
+**Core Components** (`src/components/ui/core/`):
 
-**Key patterns**: vh for containers, absolute positioning, `StatusBar` style, `LinearGradient` with tokens, inline shadows
-
-## Text Components (`src/components/ui/Text.tsx`)
-
-**Semantic components** (all accept `weight` prop):
-
-| Component      | Size        | Default Weight  | Use For                  |
-| -------------- | ----------- | --------------- | ------------------------ |
-| `Heading1Text` | 32px (5xl)  | bold            | Page titles              |
-| `Heading2Text` | 24px (3xl)  | bold            | Section titles           |
-| `Heading3Text` | 18px (xl)   | semibold        | Subsection titles        |
-| `TitleText`    | 16px (lg)   | bold, uppercase | Titles, emphasized       |
-| `BodyText`     | 14px (base) | regular         | Main content             |
-| `SubtitleText` | 14px (base) | regular         | Secondary info           |
-| `CaptionText`  | 12px (sm)   | regular         | Helper text, metadata    |
-| `LabelText`    | 10px (xs)   | regular         | Form labels, tags        |
-| `SmallText`    | 8px (2xs)   | regular         | Micro labels, time units |
-| `MutedText`    | 12px (sm)   | light           | Placeholders, disabled   |
-| `ErrorText`    | 12px (sm)   | regular         | Errors, validation       |
-| `NegativeText` | 14px (base) | regular         | Dark backgrounds         |
-
-**Colors**: Prefer `anmasa-*` (brand) or `text-*` (semantic). Font sizes use numbered naming (`text-2xs`), not `xxs`.
-
-**Example**: `<CaptionText weight="semibold" className="text-anmasa-grey">{category}</CaptionText>`
-
-## UI Wrappers (`src/components/ui/`)
-
-**Prefer wrappers** over raw RN components: `<Card>`, `<Button>`, `<Modal>`, `<Text>`, `<Icon>`, `<Divider>`, `<Badge>`, `<Price>`, `<IconButton>`, `<AppImage>`, `<Input>`, `<Screen>`
-
-Why: Consistency, single source of truth, token integration, type safety. All accept `className` for customization.
-
-## Component Reference
-
-### Card
-
-Default: `bg-surface`, `rounded-2xl`, `border border-border`, `p-4`, `shadow-sm`
+**Button** (`button.tsx`):
 
 ```tsx
-<Card className="gap-2">
-  <AppImage source={{ uri: product.image }} className="h-40 w-full" />
-  <Text weight="semibold">{product.name}</Text>
-  <Price value={product.price} />
-</Card>
+<Button
+  label="Submit"
+  variant="default" // default | secondary | outline | destructive | ghost | link
+  size="default"    // default | lg | sm | icon
+  loading={isPending}
+  disabled={false}
+  fullWidth={true}
+  onPress={handleSubmit}
+  className="mt-4"
+  testID="submit-button"
+/>
+
+// Button with children (custom content)
+<Button variant="secondary" size="lg">
+  <Icon name="arrow-right" size={20} color={colors.white} />
+  <Text className="ml-2 text-white">Next</Text>
+</Button>
 ```
 
-### Button
+**Variants**:
 
-**Variants**: `brand` (green primary), `outline`, `ghost`, `danger`
-**Sizes**: `sm` (36px), `md` (44px), `lg` (48px)
-**Props**: `loading`, `fullWidth`, `variant`, `size`, `accessibilityLabel`
+- `default` - Black (dark theme: white) - Primary actions
+- `secondary` - Primary-600 blue - Secondary actions
+- `outline` - Border with primary-600 - Tertiary actions
+- `destructive` - Danger-500 red - Delete/destructive actions
+- `ghost` - Transparent - Inline actions
+- `link` - Transparent with text - Text links
+
+**Input** (`input.tsx`):
 
 ```tsx
-<Button variant="brand" size="lg" fullWidth onPress={handleSubmit}>Submit</Button>
-<Button variant="outline" loading>Processing...</Button>
-<Button variant="danger">Delete</Button>
+// Uncontrolled
+<Input
+  label="Email"
+  placeholder="Enter email"
+  value={email}
+  onChangeText={setEmail}
+  error={errors.email}
+  className="mb-4"
+  testID="email-input"
+/>
+
+// Controlled (with React Hook Form)
+<ControlledInput<FormType>
+  name="email"
+  control={control}
+  label="Email"
+  rules={{ required: 'Email is required' }}
+/>
 ```
 
-✅ Use for: Forms, CTAs, destructive actions
-❌ Don't use for: Navigation, cards, icon-only (use `<IconButton>`)
-
-### Input
-
-**Props**: `label`, `helpText`, `error`, `className`, `inputClassName`
-**Defaults**: `h-12`, `px-4`, `rounded-2xl`, `border` (red on error), `bg-surface`
+**Text** (`text.tsx`):
 
 ```tsx
-<Input label="Email" error={errors.email} value={email} onChange={setEmail} />
+<Text className="text-base text-neutral-900 dark:text-neutral-50">
+  Simple text
+</Text>
+
+// With i18n
+<Text tx="common.welcome" className="text-lg font-inter-bold" />
 ```
 
-### Screen
-
-**Props**: `scroll` (default true), `safeArea` (default true), `edges`, `padding` (none/sm/md/lg/xl), `header`, `statusBarStyle`, `keyboardAware`, `scrollViewProps`
+**Select** (`select.tsx`):
 
 ```tsx
-<Screen header={<AppHeader title="Products" />} padding="md">
-  <FlatList data={products} renderItem={ProductCard} />
-</Screen>
+const options = [
+  { label: 'Option 1', value: '1' },
+  { label: 'Option 2', value: '2' },
+];
 
-<Screen keyboardAware padding="lg">
-  <Input label="Email" />
-  <Button variant="brand">Login</Button>
-</Screen>
+<Select
+  label="Choose option"
+  options={options}
+  value={selectedValue}
+  onSelect={setSelectedValue}
+  placeholder="Select an option"
+  error={errors.option}
+/>
+
+// Controlled (with React Hook Form)
+<ControlledSelect<FormType>
+  name="option"
+  control={control}
+  label="Choose option"
+  options={options}
+/>
 ```
 
-### Modal
+**Checkbox/Radio/Switch** (`checkbox.tsx`):
 
-**Simple bottom sheet with slide-up animation and keyboard handling**
+```tsx
+// Checkbox
+<Checkbox.Root checked={checked} onChange={setChecked}>
+  <Checkbox.Icon checked={checked} />
+  <Checkbox.Label>Accept terms</Checkbox.Label>
+</Checkbox.Root>
 
-**Props**: `isVisible`, `onClose`, `height` ("90%" | 600), `disableClose`, `className`, `style`, `backdropClassName`, `backdropStyle`
+// Radio
+<Radio.Root checked={selected === 'option1'} onChange={() => setSelected('option1')}>
+  <Radio.Icon checked={selected === 'option1'} />
+  <Radio.Label>Option 1</Radio.Label>
+</Radio.Root>
+
+// Switch
+<Switch.Root checked={enabled} onChange={setEnabled}>
+  <Switch.Icon checked={enabled} />
+  <Switch.Label>Enable notifications</Switch.Label>
+</Switch.Root>
+```
+
+**Image** (`image.tsx`):
+
+```tsx
+<Image
+  source={{ uri: 'https://example.com/image.jpg' }}
+  className="h-56 w-full rounded-xl"
+  contentFit="cover"
+  placeholder={blurhash}
+  transition={300}
+/>
+```
+
+**Divider** (`divider.tsx`):
+
+```tsx
+<Divider className="my-4" />
+<Divider horizontal={false} className="mx-4" /> {/* Vertical */}
+```
+
+**ProgressBar** (`progress-bar.tsx`):
+
+```tsx
+<ProgressBar progress={0.65} className="mb-4" color={colors.primary[600]} />
+```
+
+**Extended Components** (`src/components/ui/extended/`):
+
+**Modal** (`modal.tsx`):
+
+```tsx
+// Hook-based usage
+const { ref, present, dismiss } = useModal();
+
+<Modal
+  ref={ref}
+  title="Modal Title"
+  snapPoints={['60%', '90%']}
+  detached={false}
+>
+  <View className="p-4">
+    <Text>Modal content</Text>
+    <Button label="Close" onPress={dismiss} />
+  </View>
+</Modal>
+
+// Trigger
+<Button label="Open Modal" onPress={present} />
+```
 
 **Features**:
 
-- Smooth slide-up animation (spring)
-- Built-in KeyboardAvoidingView (platform-aware)
-- Flexible height control (% or px)
-- Safe area aware with automatic padding
-- Backdrop with tap-to-dismiss
-- Fully customizable via className/style
+- Built on @gorhom/bottom-sheet
+- Auto backdrop with tap-to-dismiss
+- Dark mode support
+- Custom snap points
+- Detached mode (floating)
 
-**Philosophy**: Composition over configuration - consumers control their own headers/content layout
-
-**Height Control**:
-
-- `height="90%"` - Percentage of screen (most common)
-- `height={600}` - Fixed pixels (auto-scaled with rs())
+**Accordion** (`accordion.tsx`):
 
 ```tsx
-// Login/OTP Form Modal with Close Button
-<Modal
-  isVisible={isVisible}
-  onClose={onClose}
-  height="90%"
-  disableClose={isLoading}
-  className="bg-white">
-  {/* Close Button */}
-  <View className="flex-row justify-end px-4 pt-4">
-    <Pressable onPress={onClose} disabled={isLoading} className="p-2 bg-surface-subtle rounded-full">
-      <Icon name="chevron-down" size={20} color={Colors.text.body} />
-    </Pressable>
-  </View>
+// Single item
+<Accordion.Item
+  title="Accordion Title"
+  open={isOpen}
+  onPress={() => setIsOpen(!isOpen)}
+>
+  <Text>Accordion content</Text>
+</Accordion.Item>
 
-  {/* Content */}
-  <PhoneNumberInput onSubmit={handleSubmit} />
-</Modal>
-
-// Address Selection with Scrolling
-<Modal isVisible={isVisible} onClose={onClose} height={500}>
-  <ScrollView keyboardShouldPersistTaps="handled">
-    <AddressList addresses={addresses} />
-  </ScrollView>
-</Modal>
-
-// Custom Layout (No Scrolling)
-<Modal isVisible={isVisible} onClose={onClose} height={520} className="bg-white">
-  <View className="px-6 pt-4 flex-1">
-    {/* Your custom layout with headers, close buttons, etc. */}
-  </View>
-</Modal>
+// Group (single or multiple expansion)
+<Accordion.Group type="single" defaultValue="item1">
+  <Accordion.Item value="item1" title="Item 1">
+    <Text>Content 1</Text>
+  </Accordion.Item>
+  <Accordion.Item value="item2" title="Item 2">
+    <Text>Content 2</Text>
+  </Accordion.Item>
+</Accordion.Group>
 ```
 
-✅ Use for: Bottom sheets, forms with keyboard input, overlays
-❌ Don't use for: Complex custom animations (create custom component)
-
-**Note**: Modal automatically handles keyboard avoidance. Add ScrollView as children if you need scrolling. Consumers control all layout, headers, and close buttons for maximum flexibility.
-
-### Badge, Divider, Price, IconButton, AppImage
-
-- **Badge**: Tones: `success`, `danger`, `warning`, `default`. `<Badge tone="success">In Stock</Badge>`
-- **Divider**: `<Divider />` or `<Divider vertical />`
-- **Price**: `<Price value={99.99} />` (₹ formatted)
-- **IconButton**: `<IconButton name="heart" onPress={onFavorite} />` (haptic, 22px)
-- **AppImage**: Enhanced image with caching, transitions, fallback. `<AppImage source={{ uri }} className="h-40" />`
-
-## File Naming Conventions
-
-### Screens & Pages
-
-- `src/app/(tabs)/index.tsx` - Tab screen (home)
-- `src/app/product/[id].tsx` - Dynamic route (product details)
-- `src/app/_layout.tsx` - Root layout
-- Use lowercase with dashes for routes: `product-list.tsx`
-
-### Components
-
-- **UI Components**: `src/components/ui/ComponentName.tsx` (PascalCase)
-- **Layout Components**: `src/components/layout/AppHeader.tsx` (PascalCase)
-- **Feature Components**: `src/features/catalog/components/ProductCard.tsx` (PascalCase)
-
-### Hooks, Repositories, Stores
-
-- **Hooks**: `src/features/catalog/hooks/useProducts.ts` (camelCase with `use` prefix)
-- **Repository**: `src/features/catalog/repository/product.repository.ts` (kebab-case)
-- **Store**: `src/store/location.store.tsx` (kebab-case, `.tsx` for Context, `.ts` for Zustand)
-
-### Types & Validation
-
-- **Types**: `src/features/catalog/types/product.types.ts` (kebab-case)
-- **Validation**: `src/features/address/validation/address.schema.ts` (kebab-case)
-
-### Utils & Config
-
-- **Utils**: `src/lib/cn.ts`, `src/lib/axios.ts` (kebab-case)
-- **Config**: `src/theme/tokens.ts` (kebab-case)
-
-## Adding UI Wrappers
-
-**Process**: Identify pattern → Extract → Test → Document → Migrate
-
-**Template** (`src/components/ui/NewComponent.tsx`):
+**Badge** (`badge.tsx`):
 
 ```tsx
-import { View, ViewProps } from 'react-native';
-import { cn } from '../../lib/cn';
+<Badge
+  label="New"
+  type="default" // default | dot | icon
+  variant="primary" // primary | success | warning | danger | neutral
+  size="sm" // sm | md | lg
+/>
 
-type Props = ViewProps & {
+// Badge with number
+<Badge label="5" type="number" variant="danger" />
+
+// Badge with icon
+<Badge type="icon" variant="success" icon={<Icon name="check" />} />
+```
+
+**Card** (`card.tsx`):
+
+```tsx
+<Card className="p-4 mb-4">
+  <Text className="text-lg font-inter-bold">Card Title</Text>
+  <Text className="text-neutral-600">Card content</Text>
+</Card>
+```
+
+**List** (`list.tsx`):
+
+```tsx
+// FlashList wrapper
+<List
+  data={items}
+  renderItem={({ item }) => <ItemCard item={item} />}
+  keyExtractor={(item) => item.id}
+  estimatedItemSize={100}
+/>
+
+// Empty state
+<EmptyList
+  isLoading={isPending}
+  title="No items found"
+  description="Try adjusting your filters"
+/>
+```
+
+**AlertDialog** (`alert-dialog.tsx`):
+
+```tsx
+<AlertDialog
+  visible={showDialog}
+  title="Delete Item"
+  description="Are you sure you want to delete this item? This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  onConfirm={handleDelete}
+  onCancel={() => setShowDialog(false)}
+  variant="danger"
+/>
+```
+
+**Price** (`price.tsx`):
+
+```tsx
+<Price
+  value={99.99}
+  currency="USD"
+  className="text-lg font-inter-bold text-primary-600"
+/>
+```
+
+**ChipSelection** (`chip-selection.tsx`):
+
+```tsx
+const options = ['Option 1', 'Option 2', 'Option 3'];
+
+<ChipSelection
+  options={options}
+  selected={selectedOption}
+  onSelect={setSelectedOption}
+  multiple={false}
+/>;
+```
+
+**QuantityStepper** (`quantity-stepper.tsx`):
+
+```tsx
+<QuantityStepper
+  value={quantity}
+  onChange={setQuantity}
+  min={1}
+  max={10}
+  step={1}
+/>
+```
+
+**SearchInput** (`search-input.tsx`):
+
+```tsx
+<SearchInput
+  value={searchQuery}
+  onChangeText={setSearchQuery}
+  placeholder="Search items..."
+  onClear={() => setSearchQuery('')}
+/>
+```
+
+**Layout Components** (`src/components/ui/layout/`):
+
+**Screen** (`screen.tsx`):
+
+```tsx
+<Screen
+  scroll={true}
+  safeArea={true}
+  edges={['top', 'bottom']}
+  padding="md" // none | sm | md | lg | xl
+  header={<HomeHeader title="Feed" />}
+  statusBarStyle="dark" // dark | light | auto
+  keyboardAware={false}
+  className="bg-white"
+>
+  <View className="flex-1">{/* Screen content */}</View>
+</Screen>
+```
+
+**Features**:
+
+- Auto SafeAreaView
+- Keyboard handling (KeyboardAvoidingView)
+- StatusBar integration
+- Flexible padding presets
+- Optional header slot
+- ScrollView or static View
+
+**HomeHeader** (`home-header.tsx`):
+
+```tsx
+<HomeHeader
+  title="Feed"
+  showBack={false}
+  rightAction={
+    <Pressable onPress={handleSearch}>
+      <Icon name="search" size={24} color={colors.neutral[900]} />
+    </Pressable>
+  }
+/>
+```
+
+**AppHeader** (`app-header.tsx`):
+
+```tsx
+<AppHeader
+  title="Post Details"
+  showBack={true}
+  onBack={() => router.back()}
+  rightAction={<Icon name="share" />}
+/>
+```
+
+**BottomActionSection** (`bottom-action-section.tsx`):
+
+```tsx
+<BottomActionSection>
+  <Button label="Save" variant="secondary" onPress={handleSave} />
+  <Button label="Cancel" variant="outline" onPress={handleCancel} />
+</BottomActionSection>
+```
+
+**Icons** (`src/components/ui/icons/`):
+
+Available icons (18+ custom SVG components):
+
+- ArrowLeft, ArrowRight, Avatar, CaretDown
+- Feed, GitHub, Home, Language
+- PlaceholderImage, PlaceholderVideo
+- Rate, Search, Settings, Share, Style, Support, Website
+
+**Usage**:
+
+```tsx
+import { Search } from '@/components/ui/icons';
+
+<Search className="text-neutral-900" />;
+```
+
+### Component Styling with tailwind-variants
+
+**Pattern** (for custom components):
+
+```tsx
+import { tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+
+const component = tv({
+  slots: {
+    container: 'flex-row items-center rounded-lg',
+    label: 'text-base font-inter-medium',
+    icon: 'size-6',
+  },
+  variants: {
+    variant: {
+      default: {
+        container: 'bg-white border border-neutral-300',
+        label: 'text-neutral-900',
+      },
+      primary: {
+        container: 'bg-primary-600',
+        label: 'text-white',
+      },
+    },
+    size: {
+      sm: { container: 'h-8 px-3', label: 'text-sm' },
+      md: { container: 'h-10 px-4', label: 'text-base' },
+    },
+    disabled: {
+      true: {
+        container: 'bg-neutral-100',
+        label: 'text-neutral-400',
+      },
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'md',
+  },
+});
+
+type ComponentVariants = VariantProps<typeof component>;
+
+interface Props extends ComponentVariants {
+  label: string;
   className?: string;
-  variant?: 'default' | 'alt';
-};
+}
 
-export function NewComponent({
+export function Component({
+  label,
+  variant,
+  size,
+  disabled,
   className,
-  variant = 'default',
-  ...props
 }: Props) {
+  const styles = component({ variant, size, disabled });
+
   return (
-    <View
-      {...props}
-      className={cn(
-        'bg-surface rounded-2xl p-4', // Base styles
-        variant === 'alt' && 'bg-surface-soft', // Variants
-        className // Custom overrides
-      )}
-    />
+    <View className={styles.container({ className })}>
+      <Text className={styles.label()}>{label}</Text>
+    </View>
   );
 }
 ```
-
-## Icon Management
-
-1. Add `icon-name.svg` (24x24px viewBox, clean paths) to `src/assets/icons/`
-2. Import in `Icon.tsx`: `import NewIcon from "../../assets/icons/new-icon.svg";`
-3. Add to MAP: `const MAP = { ..., 'new-icon': NewIcon } as const;`
-4. Use with type safety: `<Icon name="new-icon" size={24} color={Colors.text.body} />`
 
 ## Common Patterns
 
 ### Navigation Pattern
 
 ```tsx
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 
+// Programmatic navigation
 const router = useRouter();
 
-// Navigate to route
-router.push('/products');
-router.push(`/product/${productId}`); // Dynamic route
+router.push('/feed/add-post'); // Navigate to route
+router.push(`/feed/${postId}`); // Dynamic route
 router.back(); // Go back
+router.replace('/login'); // Replace (no back)
 
-// Replace (no back)
-router.replace('/login');
-
-// Header with back button
-<Pressable onPress={router.back} className="p-2">
-  <Icon name="arrow-left" size={24} color={Colors.text.body} />
-</Pressable>;
-```
-
-### Product Card Pattern
-
-```tsx
-<Pressable onPress={() => router.push(`/product/${product.id}`)}>
-  <Card className="gap-2">
-    <AppImage
-      source={{ uri: product.imageUrl }}
-      className="h-40 w-full rounded-xl"
-    />
-    <View className="gap-1">
-      <Text weight="semibold" numberOfLines={2}>
-        {product.name}
-      </Text>
-      <Price value={product.price} />
-      <CaptionText className="text-anmasa-grey">{product.category}</CaptionText>
-    </View>
-    <Button
-      variant="brand"
-      size="sm"
-      onPress={(e) => {
-        e.stopPropagation();
-        addToCart();
-      }}
-    >
-      Add to Cart
-    </Button>
-  </Card>
-</Pressable>
-```
-
-### Form Pattern
-
-```tsx
-<Screen keyboardAware padding="lg">
-  <Heading2Text className="mb-4">Sign Up</Heading2Text>
-
-  <Input
-    label="Full Name"
-    value={name}
-    onChangeText={setName}
-    error={errors.name}
-  />
-
-  <Input
-    label="Email"
-    value={email}
-    onChangeText={setEmail}
-    keyboardType="email-address"
-    error={errors.email}
-  />
-
-  <Input
-    label="Password"
-    value={password}
-    onChangeText={setPassword}
-    secureTextEntry
-    error={errors.password}
-  />
-
-  <Button
-    variant="brand"
-    size="lg"
-    fullWidth
-    onPress={handleSubmit}
-    loading={isLoading}
-  >
-    Create Account
-  </Button>
-</Screen>
-```
-
-### List Pattern
-
-```tsx
-<Screen header={<AppHeader title="Products" showBack />}>
-  <FlatList
-    data={products}
-    renderItem={({ item }) => <ProductCard product={item} />}
-    keyExtractor={(item) => item.id}
-    contentContainerClassName="gap-4 p-4"
-    showsVerticalScrollIndicator={false}
-  />
-</Screen>
-```
-
-### Header with Gradient Pattern
-
-```tsx
-<View className="relative h-[17vh]">
-  <LinearGradient
-    colors={[Colors.anmasa.success, Colors.anmasa.green]}
-    className="absolute inset-x-0 top-0 h-full rounded-b-xl"
-  />
-  <StatusBar style="light" />
-
-  <Pressable className="absolute top-11 left-4 right-4" onPress={onSearch}>
-    <Icon name="search" size={24} color={Colors.surface.subtle} />
-    <NegativeText>Search products...</NegativeText>
+// Link component
+<Link href="/feed/add-post" asChild>
+  <Pressable className="p-4 bg-primary-600 rounded-lg">
+    <Text className="text-white">Create Post</Text>
   </Pressable>
-</View>
+</Link>;
+
+// Get route params
+const { id } = useLocalSearchParams<{ id: string }>();
 ```
 
-### Category Badge Pattern
+### Feed/List Pattern
 
 ```tsx
-<View className="flex-row gap-2 flex-wrap">
-  <Badge tone="success">New</Badge>
-  <Badge tone="warning">Limited Stock</Badge>
-  <Badge>Organic</Badge>
-</View>
+import { FlashList } from '@shopify/flash-list';
+
+export default function Feed() {
+  const { data, isPending, isError, refetch } = usePosts();
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: Post }) => <PostCard post={item} />,
+    []
+  );
+
+  if (isError) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center p-8">
+          <Text className="text-danger-600 text-lg mb-4">
+            Error loading posts
+          </Text>
+          <Button label="Retry" variant="outline" onPress={() => refetch()} />
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen safeArea={false} header={<HomeHeader title="Feed" />}>
+      <FlashList
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<EmptyList isLoading={isPending} />}
+        estimatedItemSize={300}
+        showsVerticalScrollIndicator={false}
+      />
+    </Screen>
+  );
+}
+```
+
+### Post Card Pattern
+
+```tsx
+export const PostCard = ({ post }: { post: Post }) => {
+  return (
+    <Link href={`/feed/${post.id}`} asChild>
+      <Pressable>
+        <Card className="m-2 overflow-hidden">
+          <Image
+            source={{ uri: post.imageUrl }}
+            className="h-56 w-full rounded-t-xl"
+            contentFit="cover"
+          />
+          <View className="p-4">
+            <Text className="text-xl font-inter-bold mb-2">{post.title}</Text>
+            <Text numberOfLines={3} className="text-neutral-600 leading-snug">
+              {post.body}
+            </Text>
+          </View>
+        </Card>
+      </Pressable>
+    </Link>
+  );
+};
+```
+
+### Form Pattern (with Zod validation)
+
+```tsx
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { useAddPost, usePosts } from '@/api';
+import { Button, ControlledInput, View } from '@/components/ui';
+import { toast } from '@/lib/toast';
+
+// 1. Define schema
+const schema = z.object({
+  title: z.string().min(10, 'Title must be at least 10 characters'),
+  body: z.string().min(120, 'Body must be at least 120 characters'),
+});
+
+type FormType = z.infer<typeof schema>;
+
+// 2. Component
+export default function AddPost() {
+  const { control, handleSubmit } = useForm<FormType>({
+    resolver: zodResolver(schema),
+  });
+
+  const { mutate: addPost, isPending } = useAddPost();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const onSubmit = (data: FormType) => {
+    addPost(
+      { ...data, userId: 1 },
+      {
+        onSuccess: () => {
+          // Use exported queryKey from hook
+          queryClient.invalidateQueries({ queryKey: usePosts.queryKey });
+          toast.success('Post added successfully');
+          router.back();
+        },
+        onError: (error) => {
+          toast.fromHttpError(error);
+        },
+      }
+    );
+  };
+
+  return (
+    <View className="flex-1 p-4">
+      <ControlledInput<FormType>
+        name="title"
+        control={control}
+        label="Title"
+        placeholder="Enter post title"
+      />
+
+      <ControlledInput<FormType>
+        name="body"
+        control={control}
+        label="Body"
+        placeholder="Enter post body"
+        multiline
+        numberOfLines={6}
+        className="h-32"
+      />
+
+      <Button
+        label="Add Post"
+        loading={isPending}
+        onPress={handleSubmit(onSubmit)}
+      />
+    </View>
+  );
+}
+```
+
+### Detail Screen Pattern
+
+```tsx
+export default function PostDetail() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { data, isPending, isError } = usePost({
+    variables: { id: Number(id) },
+  });
+
+  if (isPending) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={colors.primary[600]} />
+          <Text className="mt-4 text-neutral-600">Loading post...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center p-8">
+          <Text className="text-danger-600 text-lg">Post not found</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen header={<AppHeader title="Post" showBack />} padding="md">
+      <Text className="text-2xl font-inter-bold mb-4">{data.title}</Text>
+      <Text className="text-neutral-700 leading-relaxed">{data.body}</Text>
+    </Screen>
+  );
+}
+```
+
+### Bottom Sheet Modal Pattern
+
+```tsx
+export default function Component() {
+  const { ref, present, dismiss } = useModal();
+
+  return (
+    <View>
+      <Button label="Open Options" onPress={present} />
+
+      <Modal ref={ref} title="Options" snapPoints={['40%', '60%']}>
+        <View className="p-4 gap-4">
+          <Button
+            label="Option 1"
+            variant="outline"
+            onPress={() => {
+              handleOption1();
+              dismiss();
+            }}
+          />
+          <Button
+            label="Option 2"
+            variant="outline"
+            onPress={() => {
+              handleOption2();
+              dismiss();
+            }}
+          />
+        </View>
+      </Modal>
+    </View>
+  );
+}
 ```
 
 ### Loading State Pattern
 
 ```tsx
 {
-  isLoading && (
+  isPending && (
     <View className="flex-1 items-center justify-center">
-      <ActivityIndicator size="large" color={Colors.anmasa.green} />
-      <BodyText className="mt-4 text-anmasa-grey">Loading products...</BodyText>
+      <ActivityIndicator size="large" color={colors.primary[600]} />
+      <Text className="mt-4 text-neutral-600">Loading...</Text>
     </View>
   );
 }
@@ -520,18 +1194,22 @@ router.replace('/login');
 
 ```tsx
 {
-  !isLoading && products.length === 0 && (
+  !isPending && data?.length === 0 && (
     <View className="flex-1 items-center justify-center p-8">
-      <Icon name="empty-box" size={64} color={Colors.anmasa.disabled} />
-      <Heading3Text className="mt-4 text-center">
-        No Products Found
-      </Heading3Text>
-      <SubtitleText className="mt-2 text-center">
-        Try adjusting your filters
-      </SubtitleText>
-      <Button variant="outline" className="mt-6" onPress={clearFilters}>
-        Clear Filters
-      </Button>
+      <View className="items-center">
+        <View className="size-20 bg-neutral-100 rounded-full items-center justify-center mb-4">
+          <Icon name="feed" size={40} color={colors.neutral[400]} />
+        </View>
+        <Text className="text-xl font-inter-bold mb-2">No Posts Found</Text>
+        <Text className="text-neutral-600 text-center mb-6">
+          Start by creating your first post
+        </Text>
+        <Button
+          label="Create Post"
+          variant="secondary"
+          onPress={() => router.push('/feed/add-post')}
+        />
+      </View>
     </View>
   );
 }
@@ -541,12 +1219,16 @@ router.replace('/login');
 
 ```tsx
 {
-  error && (
-    <View className="p-4 bg-red-50 rounded-xl border border-red-200">
-      <ErrorText>{error.message}</ErrorText>
-      <Button variant="outline" size="sm" className="mt-2" onPress={retry}>
-        Retry
-      </Button>
+  isError && (
+    <View className="m-4 p-4 bg-danger-50 rounded-xl border border-danger-200">
+      <Text className="text-danger-700 font-inter-bold mb-2">Error</Text>
+      <Text className="text-danger-600 mb-4">{error.message}</Text>
+      <Button
+        label="Retry"
+        variant="outline"
+        size="sm"
+        onPress={() => refetch()}
+      />
     </View>
   );
 }
@@ -556,322 +1238,585 @@ router.replace('/login');
 
 ```tsx
 <Screen>
-  {isLoading ? (
-    <Loader />
-  ) : error ? (
-    <ErrorState error={error} onRetry={refetch} />
-  ) : products.length === 0 ? (
-    <EmptyState />
+  {isPending ? (
+    <LoadingView />
+  ) : isError ? (
+    <ErrorView error={error} onRetry={refetch} />
+  ) : data?.length === 0 ? (
+    <EmptyView />
   ) : (
-    <FlatList data={products} renderItem={renderProduct} />
+    <FlashList data={data} renderItem={renderItem} />
   )}
 </Screen>
 ```
 
-### API Integration Pattern
+### Animation Pattern (with Moti)
 
 ```tsx
-// 1. Repository (src/features/catalog/repository/product.repository.ts)
-export const productRepository = {
-  async getProducts(filters?: ProductFilters): Promise<Product[]> {
-    const response = await axiosInstance.get<ProductDTO[]>('/api/products', {
-      params: filters,
-    });
-    return response.data.map(this.mapDTOToProduct);
+import { MotiView } from 'moti';
+
+// Fade in
+<MotiView
+  from={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ type: 'timing', duration: 300 }}
+>
+  <Content />
+</MotiView>
+
+// Slide up
+<MotiView
+  from={{ opacity: 0, translateY: 50 }}
+  animate={{ opacity: 1, translateY: 0 }}
+  transition={{ type: 'spring', damping: 15 }}
+>
+  <Content />
+</MotiView>
+
+// Scale bounce
+<MotiView
+  from={{ scale: 0 }}
+  animate={{ scale: 1 }}
+  transition={{ type: 'spring', damping: 10 }}
+>
+  <Content />
+</MotiView>
+```
+
+### Haptic Feedback Pattern
+
+```tsx
+import * as Haptics from 'expo-haptics';
+
+// Light tap
+<Pressable
+  onPress={() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    handlePress();
+  }}
+>
+  <Text>Button</Text>
+</Pressable>;
+
+// Success feedback
+Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+// Error feedback
+Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+// Selection change
+Haptics.selectionAsync();
+```
+
+## Adding New Features
+
+### When to Create a Store
+
+**Create Zustand Store When**:
+
+- State is shared across multiple screens/features
+- State needs to persist across app restarts (with MMKV)
+- Complex state logic with multiple actions
+- Global UI state (theme, language, etc.)
+
+**Example: Orders Feature with Store**
+
+```tsx
+// src/store/orders/index.tsx
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { zustandStorage } from '@/lib/storage';
+
+type OrderFilters = {
+  status?: 'pending' | 'delivered' | 'cancelled';
+  dateRange?: { start: Date; end: Date };
+};
+
+type OrdersState = {
+  filters: OrderFilters;
+  setFilters: (filters: OrderFilters) => void;
+  clearFilters: () => void;
+
+  selectedOrderId: string | null;
+  setSelectedOrderId: (id: string | null) => void;
+};
+
+export const useOrdersStore = create<OrdersState>()(
+  persist(
+    (set) => ({
+      filters: {},
+      setFilters: (filters) => set({ filters }),
+      clearFilters: () => set({ filters: {} }),
+
+      selectedOrderId: null,
+      setSelectedOrderId: (id) => set({ selectedOrderId: id }),
+    }),
+    {
+      name: 'orders-storage',
+      storage: createJSONStorage(() => zustandStorage),
+    }
+  )
+);
+```
+
+**Don't Create Store When**:
+
+- State is only used in one screen/component → Use useState
+- Server data that needs caching → Use React Query
+- Form state → Use React Hook Form
+- Derived state → Use useMemo
+
+### Feature Implementation Checklist
+
+When adding a new feature (e.g., Orders, Email Sync):
+
+**1. API Layer** (`src/api/[feature]/`):
+
+```
+└── orders/
+    ├── repository.ts       # Data access methods
+    ├── types.ts           # TypeScript types (DTOs, domain models)
+    └── hooks/
+        ├── use-orders.ts           # List query
+        ├── use-order.ts            # Single item query
+        ├── use-create-order.ts     # Create mutation
+        └── use-update-order.ts     # Update mutation
+```
+
+**2. Store** (if needed) (`src/store/[feature]/`):
+
+```
+└── orders/
+    └── index.tsx          # Zustand store for global state
+```
+
+**3. Components** (`src/components/[feature]/`):
+
+```
+└── orders/
+    ├── order-card.tsx     # List item component
+    ├── order-filters.tsx  # Filter component
+    └── order-status.tsx   # Status badge
+```
+
+**4. Screens** (`src/app/orders/`):
+
+```
+└── orders/
+    ├── index.tsx          # Orders list
+    ├── [id].tsx           # Order detail
+    └── create.tsx         # Create order
+```
+
+**5. Update Root Layout** (if adding to main nav):
+
+```tsx
+// src/app/(app)/_layout.tsx
+<Tabs.Screen
+  name="orders"
+  options={{
+    title: 'Orders',
+    tabBarIcon: ({ color }) => <OrdersIcon color={color} />,
+  }}
+/>
+```
+
+**Example: Email Sync Feature**
+
+```tsx
+// 1. src/api/email/types.ts
+export type Email = {
+  id: string;
+  from: string;
+  subject: string;
+  body: string;
+  receivedAt: Date;
+  isOrder: boolean;
+  orderDetails?: OrderExtract;
+};
+
+export type SyncStatus = {
+  lastSyncAt: Date;
+  totalEmails: number;
+  newOrders: number;
+};
+
+// 2. src/api/email/repository.ts
+export const EmailRepository = {
+  async sync(): Promise<SyncStatus> {
+    const data = await apiPost<SyncStatusDTO>('/email/sync');
+    return this.mapDTOToSyncStatus(data);
   },
 
-  mapDTOToProduct(dto: ProductDTO): Product {
-    return {
-      id: dto.id,
-      name: dto.name,
-      price: dto.price / 100, // Convert cents to rupees
-      imageUrl: dto.image_url,
-      category: dto.category_name,
-    };
+  async list(filters?: EmailFilters): Promise<Email[]> {
+    const data = await apiGet<EmailDTO[]>('/emails', { params: filters });
+    return data.map(this.mapDTOToEmail);
+  },
+
+  mapDTOToEmail(dto: EmailDTO): Email {
+    /* ... */
+  },
+  mapDTOToSyncStatus(dto: SyncStatusDTO): SyncStatus {
+    /* ... */
   },
 };
 
-// 2. Hook (src/features/catalog/hooks/useProducts.ts)
-export function useProducts(filters?: ProductFilters) {
-  return useQuery({
-    queryKey: ['products', filters],
-    queryFn: () => productRepository.getProducts(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
+// 3. src/api/email/hooks/use-sync-emails.ts
+export const useSyncEmails = createMutation<SyncStatus, void, AxiosError>({
+  mutationFn: () => EmailRepository.sync(),
+});
 
-// 3. Screen (src/app/(tabs)/products.tsx)
-export default function ProductsScreen() {
-  const { data: products, isLoading, error, refetch } = useProducts();
+// 4. src/store/email/index.tsx
+export const useEmailStore = create<EmailState>((set) => ({
+  lastSyncAt: null,
+  setLastSyncAt: (date) => set({ lastSyncAt: date }),
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorState error={error} onRetry={refetch} />;
+  filters: {},
+  setFilters: (filters) => set({ filters }),
+}));
+
+// 5. src/app/emails/index.tsx
+export default function EmailsScreen() {
+  const { data, isPending } = useEmails();
+  const { mutate: syncEmails, isPending: isSyncing } = useSyncEmails();
+  const { setLastSyncAt } = useEmailStore();
+
+  const handleSync = () => {
+    syncEmails(undefined, {
+      onSuccess: (data) => {
+        setLastSyncAt(data.lastSyncAt);
+        toast.success(`Synced ${data.newOrders} new orders`);
+      },
+    });
+  };
 
   return (
-    <Screen>
-      <FlatList
-        data={products}
-        renderItem={({ item }) => <ProductCard product={item} />}
+    <Screen header={<HomeHeader title="Emails" />}>
+      <View className="p-4 bg-primary-50 rounded-xl mb-4">
+        <Button label="Sync Emails" loading={isSyncing} onPress={handleSync} />
+      </View>
+      <FlashList
+        data={data}
+        renderItem={({ item }) => <EmailCard email={item} />}
+        estimatedItemSize={100}
       />
     </Screen>
   );
 }
 ```
+
+## File Naming Conventions
+
+**Screens/Pages**:
+
+- `src/app/(app)/index.tsx` - Tab screen
+- `src/app/[feature]/[id].tsx` - Dynamic route
+- `src/app/[feature]/add-[item].tsx` - Create screen
+
+**Components**:
+
+- **UI Components**: `ComponentName.tsx` (PascalCase)
+- **Feature Components**: `feature-component.tsx` (kebab-case)
+
+**Hooks**:
+
+- `use-[action].ts` (kebab-case with `use-` prefix)
+- Examples: `use-posts.ts`, `use-add-post.ts`
+
+**Repositories**:
+
+- `[feature].repository.ts` (kebab-case)
+- Examples: `posts.repository.ts`, `orders.repository.ts`
+
+**Stores**:
+
+- `src/store/[feature]/index.tsx` (kebab-case directory)
+
+**Types**:
+
+- `types.ts` or `[feature].types.ts` (kebab-case)
+
+**Utils**:
+
+- `[name].ts` (kebab-case)
+- Examples: `toast.ts`, `logger.ts`, `animations.ts`
+
+**Exports**:
+
+- Named exports preferred
+- Default exports for screens/pages only
+
+## Environment Configuration
+
+**Multi-Environment Setup**:
+
+**Environments**: development, staging, production
+
+**Files**:
+
+```
+.env.development    # Dev environment variables
+.env.staging        # Staging environment variables
+.env.production     # Production environment variables
+```
+
+**Environment Variables** (`env.js`):
+
+```typescript
+// Client variables (accessible at runtime)
+export const ClientEnv = {
+  APP_ENV: z.enum(['development', 'staging', 'production']),
+  EXPO_PUBLIC_API_URL: z.string().url(),
+  EXPO_PUBLIC_API_KEY: z.string().optional(),
+  // Add more client variables...
+};
+
+// Build-time variables (only during build)
+export const BuildEnv = {
+  SENTRY_DSN: z.string().optional(),
+  GOOGLE_SERVICES_JSON: z.string().optional(),
+  // Add more build variables...
+};
+```
+
+**Usage**:
+
+```tsx
+import { Env } from '@env';
+
+const apiUrl = Env.EXPO_PUBLIC_API_URL;
+const apiKey = Env.EXPO_PUBLIC_API_KEY;
+```
+
+**Build Commands**:
+
+```bash
+# Development
+pnpm start                          # Start dev
+pnpm ios                           # Run iOS dev
+pnpm android                       # Run Android dev
+pnpm build:development:ios         # Build iOS dev
+
+# Staging
+pnpm start:staging
+pnpm ios:staging
+pnpm build:staging:ios
+
+# Production
+pnpm start:production
+pnpm ios:production
+pnpm build:production:ios
+```
+
+**Bundle IDs**:
+
+- Development: `com.fetchit.development`
+- Staging: `com.fetchit.staging`
+- Production: `com.fetchit`
 
 ## Best Practices & Gotchas
 
 ### DO ✅
 
-- **Always** use semantic Text components (`<Heading2Text>`, `<BodyText>`) over manual `<Text className="...">`
-- **Always** use UI wrappers (`<Card>`, `<Button>`) over raw RN components
+- **Always** use UI wrappers (`<Button>`, `<Input>`, `<Card>`) over raw RN components
 - **Always** follow Repository pattern: Screen → Hook → Repository → Backend
-- **Always** use `Colors` tokens for JS props, NativeWind classes for JSX
-- **Always** use `cn()` utility for conditional className merging
+- **Always** use Tailwind classes for styling; inline styles ONLY for shadows/platform-specific
+- **Always** use `twMerge()` for conditional className merging
 - **Always** check docs (NativeWind, RN, Expo) before implementing new patterns
+- Use `FlashList` for long lists, not `ScrollView` with `.map()`
 - Use `numberOfLines` for text truncation
-- Use `gap-*` classes for spacing between elements
-- Use `flex-row`, `items-center`, `justify-between` for layouts
+- Use responsive classes (`sm:`, `md:`, `lg:`) for tablet/desktop support
 - Add `testID` for testing, `accessibilityLabel` for accessibility
-- Use React Query for server state, always with Repository pattern
+- Use @tanstack/react-query for ALL server state
+- Export query keys from hooks for easy invalidation
+- Use `useQuery` for queries, `useMutation` for mutations
+- Always use `useQueryClient` for query client operations
+- Validate forms with Zod schemas
+- Persist sensitive data (tokens) to MMKV storage
+- Use `useCallback` for `renderItem` in lists
+- Extract repeated components (3+ uses) into separate files
+- Use `React.memo()` for expensive components
 
 ### DON'T ❌
 
 - **NEVER** use `StyleSheet.create()` - completely removed
-- **NEVER** hardcode colors (`#3C4F19`) - use tokens or NativeWind
+- **NEVER** hardcode colors (`#197dfd`) - use Tailwind classes or token imports
 - **NEVER** skip Repository layers - always Screen → Hook → Repository
-- **NEVER** use `text-xxs` - use `text-2xs` (numbered naming)
-- **NEVER** use `<Button>` for navigation - use `<Pressable>` with `<Icon>`
-- **NEVER** hardcode container heights - use vh/vw (`h-[17vh]`)
-- Don't use inline styles for layout - only for shadows/platform-specific
-- Don't use `<Text>` directly - use semantic variants
-- Don't create new components without checking existing UI wrappers
+- **NEVER** fetch data directly in components - use hooks + repositories
+- **NEVER** use ScrollView for long lists - use FlashList
+- Don't hardcode heights/widths - use flex, responsive values
+- Don't use `<Button>` for navigation - use `<Pressable>` with `<Link>`
+- Don't create new components without checking existing UI library
 - Don't over-engineer - keep it simple
-
-### Performance Tips
-
-- Use `FlatList` for long lists, not `ScrollView` with `.map()`
-- Use `AppImage` (expo-image) for caching, not regular `<Image>`
-- Use `React.memo()` for expensive components (150+ lines)
-- Extract repeated components (3+ uses) into separate files
-- Use `keyExtractor` with stable IDs in FlatList
-- Avoid anonymous functions in renderItem - define outside component
+- Don't commit sensitive data (tokens, API keys) - use `.env` files
+- Don't use anonymous functions in `renderItem` - define outside component
 
 ### Common Mistakes
 
 ```tsx
-// ❌ Wrong
-<View style={{ padding: 16 }}>
-  <Text className="text-sm">Category</Text>
-</View>
+// ❌ Wrong - StyleSheet
+const styles = StyleSheet.create({ container: { padding: 16 } });
 
-// ✅ Correct
-<View className="p-4">
-  <CaptionText>Category</CaptionText>
-</View>
+// ✅ Correct - NativeWind
+<View className="p-4" />
 
-// ❌ Wrong - skipping Repository
-const { data } = useQuery(['products'], () => axios.get('/products'));
+// ❌ Wrong - Hardcoded color
+<View style={{ backgroundColor: '#197dfd' }} />
 
-// ✅ Correct - using Repository
-const { products } = useProducts(); // Hook calls Repository
+// ✅ Correct - Tailwind class
+<View className="bg-primary-600" />
 
-// ❌ Wrong - hardcoded color
-<Icon color="#F9FAF7" />
+// ❌ Wrong - Skipping Repository
+const { data } = useQuery(['posts'], () => axios.get('/posts'));
 
-// ✅ Correct - using token
-<Icon color={Colors.surface.subtle} />
+// ✅ Correct - Using Repository
+const { data } = usePosts(); // Hook calls Repository
+
+// ❌ Wrong - ScrollView for long list
+<ScrollView>
+  {posts.map(post => <PostCard key={post.id} post={post} />)}
+</ScrollView>
+
+// ✅ Correct - FlashList
+<FlashList
+  data={posts}
+  renderItem={({ item }) => <PostCard post={item} />}
+  estimatedItemSize={200}
+/>
+
+// ❌ Wrong - Anonymous function in renderItem
+<FlashList
+  data={posts}
+  renderItem={({ item }) => <PostCard post={item} />}
+/>
+
+// ✅ Correct - Memoized function
+const renderItem = React.useCallback(
+  ({ item }: { item: Post }) => <PostCard post={item} />,
+  []
+);
+<FlashList data={posts} renderItem={renderItem} />
 ```
 
-## Validation & Forms
+## Performance Tips
 
-### Zod Schema Pattern
+### FlashList Best Practices
 
 ```tsx
-// src/features/address/validation/address.schema.ts
-import { z } from 'zod';
+// ✅ Correct - Memoized renderItem
+const renderItem = React.useCallback(
+  ({ item }: { item: Post }) => <PostCard post={item} />,
+  []
+);
 
-export const addressSchema = z.object({
-  street: z.string().min(5, 'Street address must be at least 5 characters'),
-  city: z.string().min(2, 'City is required'),
-  pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits'),
+// ✅ Correct - Stable keyExtractor
+<FlashList
+  data={posts}
+  renderItem={renderItem}
+  keyExtractor={(item) => item.id.toString()}
+  estimatedItemSize={200} // Important for performance
+  showsVerticalScrollIndicator={false}
+/>;
+```
+
+### Image Optimization
+
+```tsx
+// ✅ Use expo-image for automatic caching
+import { Image } from '@/components/ui';
+
+<Image
+  source={{ uri: imageUrl }}
+  className="h-56 w-full"
+  contentFit="cover"
+  placeholder={blurhash} // Optional placeholder
+  transition={300} // Smooth transition
+  cachePolicy="memory-disk" // Cache strategy
+/>;
+```
+
+### React.memo for Expensive Components
+
+```tsx
+// ✅ Memoize components that render frequently
+export const PostCard = React.memo(({ post }: { post: Post }) => {
+  return (
+    <Card>
+      <Text>{post.title}</Text>
+      <Text>{post.body}</Text>
+    </Card>
+  );
 });
-
-export type AddressFormData = z.infer<typeof addressSchema>;
-
-// Hook usage
-export function useAddressForm() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validate = (data: AddressFormData) => {
-    try {
-      addressSchema.parse(data);
-      setErrors({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const fieldErrors = error.errors.reduce(
-          (acc, err) => ({
-            ...acc,
-            [err.path[0]]: err.message,
-          }),
-          {}
-        );
-        setErrors(fieldErrors);
-      }
-      return false;
-    }
-  };
-
-  return { validate, errors };
-}
 ```
 
-### Form with Validation
+### Optimistic Updates
 
 ```tsx
-export default function AddressForm() {
-  const [formData, setFormData] = useState<AddressFormData>({
-    street: '',
-    city: '',
-    pincode: '',
-    phone: '',
-  });
-  const { validate, errors } = useAddressForm();
+const { mutate: updatePost } = useUpdatePost({
+  onMutate: async (variables) => {
+    // Cancel outgoing queries
+    await queryClient.cancelQueries({ queryKey: ['posts'] });
 
-  const handleSubmit = () => {
-    if (validate(formData)) {
-      // Submit form
-      saveAddress(formData);
-    }
-  };
+    // Snapshot previous value
+    const previousPosts = queryClient.getQueryData(['posts']);
 
-  return (
-    <Screen keyboardAware>
-      <Input
-        label="Street Address"
-        value={formData.street}
-        onChangeText={(street) => setFormData({ ...formData, street })}
-        error={errors.street}
-      />
-      <Input
-        label="City"
-        value={formData.city}
-        onChangeText={(city) => setFormData({ ...formData, city })}
-        error={errors.city}
-      />
-      <Button variant="brand" onPress={handleSubmit}>
-        Submit
-      </Button>
-    </Screen>
-  );
-}
-```
+    // Optimistically update
+    queryClient.setQueryData(['posts'], (old: Post[]) =>
+      old.map((post) =>
+        post.id === variables.id ? { ...post, ...variables } : post
+      )
+    );
 
-## Mutations & Updates
-
-### React Query Mutation Pattern
-
-```tsx
-// Hook (src/features/catalog/hooks/useAddToCart.ts)
-export function useAddToCart() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (productId: string) => cartRepository.addItem(productId),
-    onSuccess: () => {
-      // Invalidate cart queries to refetch
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-
-      // Show success feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    },
-    onError: (error) => {
-      Alert.alert('Error', error.message);
-    },
-  });
-}
-
-// Usage in component
-export default function ProductDetails() {
-  const { mutate: addToCart, isPending } = useAddToCart();
-
-  return (
-    <Button
-      variant="brand"
-      loading={isPending}
-      onPress={() => addToCart(product.id)}
-    >
-      Add to Cart
-    </Button>
-  );
-}
-```
-
-### Optimistic Updates Pattern
-
-```tsx
-export function useUpdateQuantity() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
-      cartRepository.updateQuantity(itemId, quantity),
-
-    // Optimistically update UI before server responds
-    onMutate: async ({ itemId, quantity }) => {
-      await queryClient.cancelQueries({ queryKey: ['cart'] });
-
-      const previousCart = queryClient.getQueryData(['cart']);
-
-      queryClient.setQueryData(['cart'], (old: Cart) => ({
-        ...old,
-        items: old.items.map((item) =>
-          item.id === itemId ? { ...item, quantity } : item
-        ),
-      }));
-
-      return { previousCart };
-    },
-
+    return { previousPosts };
+  },
+  onError: (err, variables, context) => {
     // Rollback on error
-    onError: (err, variables, context) => {
-      queryClient.setQueryData(['cart'], context?.previousCart);
-    },
-
-    // Always refetch after error or success
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-    },
-  });
-}
+    queryClient.setQueryData(['posts'], context?.previousPosts);
+  },
+  onSettled: () => {
+    // Refetch after mutation
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+  },
+});
 ```
 
-## Testing Patterns
+## Testing
 
 ### Component Testing
 
 ```tsx
-// Use testID for testing
-<Button testID="submit-button" onPress={handleSubmit}>Submit</Button>
+// Add testID for testing
+<Button testID="submit-button" label="Submit" onPress={handleSubmit} />
 <Input testID="email-input" label="Email" />
-
-// Screen components
-<Screen testID="products-screen">
-  <FlatList testID="products-list" data={products} />
+<Screen testID="feed-screen">
+  <FlashList testID="posts-list" data={posts} />
 </Screen>
 ```
 
 ### Accessibility
 
 ```tsx
-<Button accessibilityLabel="Add product to cart" accessibilityHint="Double tap to add">
-  Add to Cart
-</Button>
+// Add accessibility props
+<Button
+  label="Add to Cart"
+  accessibilityLabel="Add product to cart"
+  accessibilityHint="Double tap to add this product to your cart"
+  accessibilityRole="button"
+/>
 
-<Icon name="close" accessibilityLabel="Close modal" />
+<Pressable
+  onPress={handleClose}
+  accessibilityLabel="Close modal"
+  accessibilityRole="button"
+  accessibilityHint="Closes the modal and returns to previous screen"
+>
+  <Icon name="close" />
+</Pressable>
 
-<AppImage source={{ uri }} accessibilityLabel={`Product image for ${product.name}`} />
+<Image
+  source={{ uri: imageUrl }}
+  accessibilityLabel={`Product image for ${product.name}`}
+/>
 ```
 
 ## Quick Reference
@@ -888,26 +1833,113 @@ export function useUpdateQuantity() {
 
 ### Font Sizes
 
-- `text-2xs` = 8px, `text-xs` = 10px, `text-sm` = 12px, `text-base` = 14px
-- `text-lg` = 16px, `text-xl` = 18px, `text-3xl` = 24px, `text-5xl` = 32px
+- `text-xs` = 12px, `text-sm` = 14px, `text-base` = 16px, `text-lg` = 18px
+- `text-xl` = 20px, `text-2xl` = 24px, `text-3xl` = 30px
 
 ### Common Color Classes
 
-- Brand: `bg-brand-500`, `text-brand-500`, `border-brand-500`
-- Surface: `bg-surface`, `bg-surface-subtle`, `bg-surface-soft`
-- Text: `text-text-title`, `text-text-body`, `text-text-subtitle`, `text-text-caption`
-- Anmasa: `text-anmasa-green`, `text-anmasa-grey`, `text-anmasa-white`, `text-anmasa-error`
+- **Primary**: `bg-primary-600`, `text-primary-600`, `border-primary-600`
+- **Success**: `bg-success-500`, `text-success-600`, `border-success-500`
+- **Warning**: `bg-warning-500`, `text-warning-600`, `border-warning-500`
+- **Danger**: `bg-danger-500`, `text-danger-600`, `border-danger-500`
+- **Neutral**: `bg-neutral-100`, `text-neutral-600`, `border-neutral-300`
+- **Charcoal**: `bg-charcoal-900`, `text-charcoal-50`, `border-charcoal-700`
 
 ### Layout Utilities
 
-- Flex: `flex-row`, `flex-col`, `flex-1`, `flex-wrap`
-- Alignment: `items-center`, `items-start`, `items-end`, `justify-between`, `justify-center`
-- Positioning: `absolute`, `relative`, `top-4`, `bottom-4`, `left-4`, `right-4`, `inset-0`
+- **Flex**: `flex-row`, `flex-col`, `flex-1`, `flex-wrap`
+- **Alignment**: `items-center`, `items-start`, `items-end`, `justify-between`, `justify-center`
+- **Positioning**: `absolute`, `relative`, `top-4`, `bottom-4`, `left-4`, `right-4`, `inset-0`
+- **Sizing**: `w-full`, `h-full`, `w-1/2`, `h-screen`, `min-h-screen`
+
+### Responsive Utilities
+
+- `sm:p-6` - Apply on phones 414px+
+- `md:flex-row` - Apply on tablets 768px+
+- `lg:w-1/2` - Apply on large tablets 1024px+
+- `xl:p-12` - Apply on desktop/foldables 1280px+
+
+## Project-Specific Notes
+
+### FetchIt App Context
+
+**Purpose**: Email sync and order tracking from multiple e-commerce platforms
+
+**Core Features**:
+
+1. **Email Sync** - Connect Gmail, read emails, extract order information
+2. **Order Tracking** - Track orders from Amazon, Flipkart, etc.
+3. **Company Orders** - Track FetchIt-fulfilled orders (no email sync needed)
+4. **Order History** - View past orders, delivery status
+5. **Notifications** - Push notifications for order updates
+
+**Future Feature Considerations**:
+
+- When adding email sync: Consider OAuth flow, background sync, email parsing
+- When adding order tracking: Consider status updates, delivery timelines, tracking URLs
+- When adding notifications: Consider push notification setup, local notifications
+- When adding multiple accounts: Consider account switching, data isolation
+
+### Architecture for FetchIt
+
+**Recommended Feature Structure**:
+
+```
+src/
+├── api/
+│   ├── email/           # Email sync feature
+│   ├── orders/          # Order tracking feature
+│   ├── tracking/        # Delivery tracking feature
+│   └── notifications/   # Push notifications
+├── components/
+│   ├── email/           # Email-related components
+│   ├── orders/          # Order-related components
+│   └── tracking/        # Tracking-related components
+├── store/
+│   ├── email/           # Email sync state
+│   └── orders/          # Order filters, selected order
+└── app/
+    ├── (app)/           # Main tabs: feed, orders, settings
+    ├── orders/          # Order screens
+    ├── email/           # Email sync screens
+    └── tracking/        # Tracking screens
+```
+
+**When implementing email sync**:
+
+- Use Repository pattern for Gmail API calls
+- Store sync status in Zustand
+- Use React Query for email list
+- Background sync with Expo Background Fetch
+- Parse emails server-side for order extraction
+
+**When implementing order tracking**:
+
+- Store selected order in Zustand
+- Use React Query for order list/details
+- WebSocket for real-time tracking updates
+- Push notifications for status changes
 
 ## Documentation
 
-**Design**: `docs/DESIGN_TOKENS_GUIDE.md` (tokens reference), `docs/design-tokens-usage.md` (enforcement rules)
+**Check these files for detailed guidance**:
 
-**Architecture**: `docs/ARCHITECTURE.md` ⭐ PRIMARY - Repository pattern, state management, validation (Zod), performance (FlatList, images, React.memo), animation/haptics, file naming, component decomposition (150-line rule, 3-use rule). **Consult BEFORE catalog/cart features or major decisions.**
+- `docs/ARCHITECTURE.md` - Deep dive into architecture patterns (if exists)
+- `tailwind.config.js` - Complete Tailwind configuration
+- `src/components/ui/tokens/` - Design token definitions
+- `src/api/posts/` - Reference implementation for new features
 
-**Principles**: KISS, DRY, no over-engineering. Ask when in doubt.
+**External Docs**:
+
+- NativeWind v4: https://www.nativewind.dev/v4/overview
+- Expo Router: https://docs.expo.dev/router/introduction/
+- @tanstack/react-query: https://tanstack.com/query/latest
+- @gorhom/bottom-sheet: https://gorhom.dev/react-native-bottom-sheet/
+
+## Principles
+
+**KISS** - Keep it simple, stupid
+**DRY** - Don't repeat yourself
+**YAGNI** - You aren't gonna need it
+
+**When in doubt, ask!** It's better to clarify requirements than to build the wrong thing.
