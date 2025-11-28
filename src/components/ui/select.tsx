@@ -14,13 +14,12 @@ import type { SvgProps } from 'react-native-svg';
 import Svg, { Path } from 'react-native-svg';
 import { tv } from 'tailwind-variants';
 
-import colors from '@/components/ui/colors';
 import { CaretDown } from '@/components/ui/icons';
 
 import type { InputControllerType } from './input';
-import { useModal } from './modal';
-import { Modal } from './modal';
+import { Modal, useModal } from './modal';
 import { Text } from './text';
+import { colors } from './tokens';
 
 const selectTv = tv({
   slots: {
@@ -210,7 +209,7 @@ export const Select = (props: SelectProps) => {
         {error && (
           <Text
             testID={`${testID}-error`}
-            className="text-sm text-danger-300 dark:text-danger-600"
+            className="text-danger-300 dark:text-danger-600 text-sm"
           >
             {error}
           </Text>

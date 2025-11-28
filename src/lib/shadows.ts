@@ -1,6 +1,6 @@
 import { Platform, type ViewStyle } from 'react-native';
 
-import colors from '@/components/ui/colors';
+import { colors } from '@/components/ui/tokens';
 
 /**
  * Centralized shadow styles for consistent elevation

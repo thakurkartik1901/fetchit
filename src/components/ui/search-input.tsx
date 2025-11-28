@@ -4,22 +4,22 @@ import { I18nManager, StyleSheet, TextInput, View } from 'react-native';
 import type { VariantProps } from 'tailwind-variants';
 import { tv } from 'tailwind-variants';
 
-import colors from './colors';
 import { Search } from './icons';
+import colors from './tokens/colors';
 
 const searchInput = tv({
   slots: {
     container: 'flex-row items-center rounded-full bg-neutral-100 px-4 py-3',
     icon: 'mx-3',
-    input: 'flex-1 font-inter text-base leading-5',
+    input: 'font-inter flex-1 text-base leading-5',
   },
   variants: {
     focused: {
       true: {
-        container: 'items-center bg-neutral-200 dark:bg-charcoal-700',
+        container: 'dark:bg-charcoal-700 items-center bg-neutral-200',
       },
       false: {
-        container: 'items-center bg-neutral-100 dark:bg-charcoal-800',
+        container: 'dark:bg-charcoal-800 items-center bg-neutral-100',
       },
     },
     size: {

@@ -5,7 +5,7 @@ import {
 } from '@react-navigation/native';
 import { useColorScheme } from 'nativewind';
 
-import colors from '@/components/ui/colors';
+import { colors } from '@/components/ui/tokens';
 
 const DarkTheme: Theme = {
   ..._DarkTheme,

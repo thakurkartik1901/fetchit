@@ -6,7 +6,6 @@ export * from './badge';
 export * from './button';
 export * from './checkbox';
 export * from './chip-selection';
-export { default as colors } from './colors';
 export * from './divider';
 export * from './focus-aware-status-bar';
 export * from './image';
@@ -17,6 +16,7 @@ export * from './progress-bar';
 export * from './search-input';
 export * from './select';
 export * from './text';
+export * from './tokens';
 export * from './utils';
 
 // export base components from react-native

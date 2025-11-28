@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { SvgProps } from 'react-native-svg';
 import Svg, { G, Mask, Path, Rect } from 'react-native-svg';
 
-import colors from '../colors';
+import colors from '../tokens/colors';
 
 export const Search = ({
   color = colors.neutral[400],
