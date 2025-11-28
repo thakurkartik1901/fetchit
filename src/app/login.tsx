@@ -3,7 +3,7 @@ import React from 'react';
 
 import type { LoginFormProps } from '@/components/auth/login-form';
 import { LoginForm } from '@/components/auth/login-form';
-import { FocusAwareStatusBar } from '@/components/ui';
+import { Screen } from '@/components/ui/layout';
 import { useAuth } from '@/store/auth';
 
 export default function Login() {
@@ -15,10 +15,10 @@ export default function Login() {
     signIn({ access: 'access-token', refresh: 'refresh-token' });
     router.push('/');
   };
+
   return (
-    <>
-      <FocusAwareStatusBar />
+    <Screen keyboardAware safeArea={false}>
       <LoginForm onSubmit={onSubmit} />
-    </>
+    </Screen>
   );
 }

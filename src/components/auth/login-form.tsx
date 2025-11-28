@@ -1,14 +1,19 @@
+/* eslint-disable max-lines-per-function */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from 'expo-router';
 import React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
+import { Pressable, ScrollView } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as z from 'zod';
 
 import { Button, ControlledInput, Text, View } from '@/components/ui';
+import { Apple, Facebook, Google } from '@/components/ui/icons';
+import { PlaceholderImage } from '@/components/ui/icons/placeholder-image';
+import colors from '@/components/ui/tokens/colors';
 
 const schema = z.object({
-  name: z.string().optional(),
   email: z
     .string({
       required_error: 'Email is required',
@@ -31,54 +36,118 @@ export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
   const { handleSubmit, control } = useForm<FormType>({
     resolver: zodResolver(schema),
   });
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior="padding"
       keyboardVerticalOffset={10}
     >
-      <View className="flex-1 justify-center p-4">
-        <View className="items-center justify-center">
-          <Text
-            testID="form-title"
-            className="pb-6 text-center text-4xl font-inter-bold"
-          >
-            Sign In
-          </Text>
-
-          <Text className="mb-6 max-w-xs text-center text-gray-500">
-            Welcome! 👋 This is a demo login screen! Feel free to use any email
-            and password to sign in and try it out.
-          </Text>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Image Section */}
+        <View className="h-96 items-center justify-center bg-primary-50">
+          <PlaceholderImage width={120} height={120} />
         </View>
 
-        <ControlledInput
-          testID="name"
-          control={control}
-          name="name"
-          label="Name"
-        />
+        {/* Form Section */}
+        <View className="flex-1 bg-white px-6 pt-8">
+          {/* Welcome Title */}
+          <Text
+            testID="form-title"
+            className="mb-6 font-inter-bold text-2xl text-black"
+          >
+            Welcome!
+          </Text>
 
-        <ControlledInput
-          testID="email-input"
-          control={control}
-          name="email"
-          label="Email"
-        />
-        <ControlledInput
-          testID="password-input"
-          control={control}
-          name="password"
-          label="Password"
-          placeholder="***"
-          secureTextEntry={true}
-        />
-        <Button
-          testID="login-button"
-          label="Login"
-          onPress={handleSubmit(onSubmit)}
-        />
-      </View>
+          {/* Email Input */}
+          <ControlledInput
+            testID="email-input"
+            control={control}
+            name="email"
+            label=""
+            placeholder="Email Address"
+            className="mb-2 rounded-xl border border-neutral-300 px-2"
+          />
+
+          {/* Password Input */}
+          <ControlledInput
+            testID="password-input"
+            control={control}
+            name="password"
+            label=""
+            placeholder="Password"
+            secureTextEntry={true}
+            className="mb-2 rounded-xl border border-neutral-300 px-2"
+          />
+
+          {/* Forgot Password Link */}
+          <Link href="/" asChild>
+            <Pressable className="mb-6">
+              <Text className="font-inter-medium text-sm text-primary-600">
+                Forgot password?
+              </Text>
+            </Pressable>
+          </Link>
+
+          {/* Login Button */}
+          <Button
+            testID="login-button"
+            label="Login"
+            variant="secondary"
+            onPress={handleSubmit(onSubmit)}
+            className="mb-4"
+          />
+
+          {/* Sign Up Link */}
+          <View className="mb-6 flex-row items-center justify-center">
+            <Text className="text-sm text-neutral-600">Not a member? </Text>
+            <Link href="/" asChild>
+              <Pressable>
+                <Text className="font-inter-medium text-sm text-primary-600">
+                  Register now
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
+
+          {/* Divider */}
+          <View className="mb-6 flex-row items-center">
+            <View className="h-px flex-1 bg-neutral-300" />
+            <Text className="px-4 text-sm text-neutral-500">
+              Or continue with
+            </Text>
+            <View className="h-px flex-1 bg-neutral-300" />
+          </View>
+
+          {/* Social Login Buttons */}
+          <View className="mb-8 flex-row items-center justify-center gap-4">
+            <Pressable
+              className="size-12 items-center justify-center rounded-full bg-neutral-300"
+              accessibilityLabel="Continue with Google"
+            >
+              <Google width={28} height={28} />
+            </Pressable>
+
+            <Pressable
+              className="size-12 items-center justify-center rounded-full bg-neutral-300"
+              accessibilityLabel="Continue with Apple"
+            >
+              <Apple width={28} height={28} color={colors.white} />
+            </Pressable>
+
+            <Pressable
+              className="size-12 items-center justify-center rounded-full bg-neutral-300"
+              accessibilityLabel="Continue with Facebook"
+            >
+              <Facebook width={28} height={28} />
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
