@@ -5,7 +5,7 @@ import type { Post } from '@/api';
 import { usePosts } from '@/api';
 import { Card } from '@/components/feed/card';
 import { EmptyList, Text, View } from '@/components/ui';
-import { AppHeader, Screen } from '@/components/ui/layout';
+import { HomeHeader, Screen } from '@/components/ui/layout';
 
 export default function Feed() {
   const { data, isPending, isError } = usePosts();
@@ -22,7 +22,7 @@ export default function Feed() {
     );
   }
   return (
-    <Screen safeArea={false} header={<AppHeader title="Feed" />}>
+    <Screen safeArea={false} header={<HomeHeader title="Feed" />}>
       <View className="flex-1 ">
         <FlashList
           data={data}

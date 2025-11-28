@@ -8,7 +8,7 @@ import { haptics } from '@/lib/haptics';
 
 import { colors } from '../tokens';
 
-type AppHeaderProps = {
+type HomeHeaderProps = {
   title?: string | null;
   showBack?: boolean;
   onBackPress?: () => void;
@@ -16,13 +16,13 @@ type AppHeaderProps = {
   className?: string;
 };
 
-export function AppHeader({
+export function HomeHeader({
   title = null,
   showBack = false,
   onBackPress,
   rightElement,
   className,
-}: AppHeaderProps) {
+}: HomeHeaderProps) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -37,7 +37,7 @@ export function AppHeader({
   return (
     <View
       className={twMerge(
-        'flex-row items-center px-4 pb-2 pt-6 border-b border-neutral-200',
+        'flex-row items-center px-4 pb-3 pt-8 border-b border-neutral-200',
         className
       )}
       // style={SHADOWS.appHeader}
