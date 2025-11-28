@@ -4,7 +4,9 @@ import * as React from 'react';
 import { usePost } from '@/api';
 import {
   ActivityIndicator,
+  AppHeader,
   FocusAwareStatusBar,
+  Screen,
   Text,
   View,
 } from '@/components/ui';
@@ -19,29 +21,34 @@ export default function Post() {
 
   if (isPending) {
     return (
-      <View className="flex-1 justify-center  p-3">
-        <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
-        <FocusAwareStatusBar />
-        <ActivityIndicator />
-      </View>
+      <Screen safeArea={false} header={<AppHeader title="Post" showBack />}>
+        <View className="flex-1 justify-center  p-3">
+          <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
+          <FocusAwareStatusBar />
+          <ActivityIndicator />
+        </View>
+      </Screen>
     );
   }
   if (isError) {
     return (
-      <View className="flex-1 justify-center p-3">
-        <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
-        <FocusAwareStatusBar />
-        <Text className="text-center">Error loading post</Text>
-      </View>
+      <Screen safeArea={false} header={<AppHeader title="Post" showBack />}>
+        <View className="flex-1 justify-center p-3">
+          <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
+          <FocusAwareStatusBar />
+          <Text className="text-center">Error loading post</Text>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <View className="flex-1 p-3 ">
-      <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
-      <FocusAwareStatusBar />
-      <Text className="text-xl">{data.title}</Text>
-      <Text>{data.body} </Text>
-    </View>
+    <Screen safeArea={false} header={<AppHeader title="Post" showBack />}>
+      <View className="flex-1 p-3 ">
+        <FocusAwareStatusBar />
+        <Text className="text-xl">{data.title}</Text>
+        <Text>{data.body} </Text>
+      </View>
+    </Screen>
   );
 }

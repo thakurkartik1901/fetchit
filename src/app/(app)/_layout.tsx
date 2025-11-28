@@ -36,6 +36,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Feed',
+          headerShown: false,
           tabBarIcon: ({ color }) => <FeedIcon color={color} />,
           headerRight: () => <CreateNewPostLink />,
           tabBarButtonTestID: 'feed-tab',

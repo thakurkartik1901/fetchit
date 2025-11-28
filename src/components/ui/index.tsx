@@ -4,6 +4,7 @@ import Svg from 'react-native-svg';
 export * from './core';
 export * from './extended';
 export * from './focus-aware-status-bar';
+export * from './layout';
 export * from './tokens';
 export * from './utils';
 

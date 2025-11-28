@@ -71,4 +71,16 @@ export const SHADOWS = {
       elevation: 3,
     },
   }) as ViewStyle,
+
+  appHeader: Platform.select({
+    ios: {
+      shadowColor: colors.black,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    android: {
+      elevation: 3,
+    },
+  }) as ViewStyle,
 } as const;
