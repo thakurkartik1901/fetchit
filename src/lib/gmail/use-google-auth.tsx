@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';

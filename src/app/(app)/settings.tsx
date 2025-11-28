@@ -1,85 +1,52 @@
 import { Env } from '@env';
-import { useColorScheme } from 'nativewind';
 
 import { Item } from '@/components/settings/item';
-import { ItemsContainer } from '@/components/settings/items-container';
 import { LanguageItem } from '@/components/settings/language-item';
+import { ProfileSection } from '@/components/settings/profile-section';
 import { ThemeItem } from '@/components/settings/theme-item';
-import {
-  colors,
-  FocusAwareStatusBar,
-  ScrollView,
-  Text,
-  View,
-} from '@/components/ui';
-import { Github, Rate, Share, Support, Website } from '@/components/ui/icons';
-import { translate } from '@/lib/i18n';
+import { Screen, View } from '@/components/ui';
 import { useAuth } from '@/store/auth';
+
+function Divider() {
+  return <View className="ml-4 h-px bg-neutral-200 dark:bg-charcoal-700" />;
+}
 
 export default function Settings() {
   const signOut = useAuth.use.signOut();
-  const { colorScheme } = useColorScheme();
-  const iconColor =
-    colorScheme === 'dark' ? colors.neutral[400] : colors.neutral[500];
+
   return (
-    <>
-      <FocusAwareStatusBar />
+    <Screen className="bg-white dark:bg-charcoal-900" scroll={true}>
+      {/* Profile Section */}
+      <ProfileSection name="Lucas Scott" username="lucasscott3" />
 
-      <ScrollView>
-        <View className="flex-1 px-4 pt-16 ">
-          <Text className="font-inter-bold text-xl">
-            {translate('settings.title')}
-          </Text>
-          <ItemsContainer title="settings.generale">
-            <LanguageItem />
-            <ThemeItem />
-          </ItemsContainer>
-
-          <ItemsContainer title="settings.about">
-            <Item text="settings.app_name" value={Env.NAME} />
-            <Item text="settings.version" value={Env.VERSION} />
-          </ItemsContainer>
-
-          <ItemsContainer title="settings.support_us">
-            <Item
-              text="settings.share"
-              icon={<Share color={iconColor} />}
-              onPress={() => {}}
-            />
-            <Item
-              text="settings.rate"
-              icon={<Rate color={iconColor} />}
-              onPress={() => {}}
-            />
-            <Item
-              text="settings.support"
-              icon={<Support color={iconColor} />}
-              onPress={() => {}}
-            />
-          </ItemsContainer>
-
-          <ItemsContainer title="settings.links">
-            <Item text="settings.privacy" onPress={() => {}} />
-            <Item text="settings.terms" onPress={() => {}} />
-            <Item
-              text="settings.github"
-              icon={<Github color={iconColor} />}
-              onPress={() => {}}
-            />
-            <Item
-              text="settings.website"
-              icon={<Website color={iconColor} />}
-              onPress={() => {}}
-            />
-          </ItemsContainer>
-
-          <View className="my-8">
-            <ItemsContainer>
-              <Item text="settings.logout" onPress={signOut} />
-            </ItemsContainer>
-          </View>
+      {/* Menu Items */}
+      <View className="px-4">
+        {/* General Settings */}
+        <View className="mb-4 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
+          <LanguageItem />
+          <Divider />
+          <ThemeItem />
         </View>
-      </ScrollView>
-    </>
+
+        {/* About */}
+        <View className="mb-4 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
+          <Item text="settings.app_name" value={Env.NAME} />
+          <Divider />
+          <Item text="settings.version" value={Env.VERSION} />
+        </View>
+
+        {/* Links */}
+        <View className="mb-4 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
+          <Item text="settings.privacy" onPress={() => {}} />
+          <Divider />
+          <Item text="settings.terms" onPress={() => {}} />
+        </View>
+
+        {/* Logout */}
+        <View className="mb-8 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
+          <Item text="settings.logout" onPress={signOut} />
+        </View>
+      </View>
+    </Screen>
   );
 }

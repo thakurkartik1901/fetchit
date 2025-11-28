@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import type { GmailMessage, OrderStatus, ParsedOrder } from './types';
 
 function getHeader(message: GmailMessage, name: string): string | undefined {

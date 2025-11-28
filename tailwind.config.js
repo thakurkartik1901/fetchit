@@ -37,7 +37,7 @@ module.exports = {
       // --------------------------
       // Optional: responsive typography
       // --------------------------
-      fontSize,
+      // fontSize,
     },
   },
   plugins: [],

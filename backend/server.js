@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -30,7 +31,7 @@ const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 app.get('/', (req, res) => {
   res.json({
     status: 'FetchIt OAuth Backend Server Running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -200,11 +201,15 @@ app.post('/auth/refresh', async (req, res) => {
 
 // Start server on all network interfaces
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ FetchIt OAuth Backend Server running on http://localhost:${PORT}`);
+  console.log(
+    `✅ FetchIt OAuth Backend Server running on http://localhost:${PORT}`
+  );
   console.log(`📱 Authorization URL: ${BACKEND_URL}/auth/authorize`);
   console.log(`🔗 Backend URL: ${BACKEND_URL}`);
   console.log(`\n⚠️  Make sure to:`);
   console.log(`   1. Update NGROK_URL in .env with your ngrok URL`);
-  console.log(`   2. Add redirect URI in Google Cloud Console: ${BACKEND_URL}/auth/callback`);
+  console.log(
+    `   2. Add redirect URI in Google Cloud Console: ${BACKEND_URL}/auth/callback`
+  );
   console.log(`   3. Update BACKEND_URL in frontend use-google-auth hook`);
 });

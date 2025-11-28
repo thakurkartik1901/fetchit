@@ -8,9 +8,14 @@ import { Pressable, ScrollView } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as z from 'zod';
 
-import { Button, ControlledInput, Text, View } from '@/components/ui';
-import { Apple, Facebook, Google } from '@/components/ui/icons';
-import { PlaceholderImage } from '@/components/ui/icons/placeholder-image';
+import {
+  Button,
+  ControlledInput,
+  HeroSection,
+  Text,
+  View,
+} from '@/components/ui';
+import { Apple, Facebook, Google, Package } from '@/components/ui/icons';
 import colors from '@/components/ui/tokens/colors';
 
 const schema = z.object({
@@ -49,8 +54,10 @@ export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
         showsVerticalScrollIndicator={false}
       >
         {/* Header Image Section */}
-        <View className="h-96 items-center justify-center bg-primary-50">
-          <PlaceholderImage width={120} height={120} />
+        <View className="h-96">
+          <HeroSection
+            icon={<Package color="#FFFFFF" width={64} height={64} />}
+          />
         </View>
 
         {/* Form Section */}
