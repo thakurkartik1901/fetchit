@@ -1,5 +1,6 @@
 import { Env } from '@env';
 
+import { GmailItem } from '@/components/settings/gmail-item';
 import { Item } from '@/components/settings/item';
 import { LanguageItem } from '@/components/settings/language-item';
 import { ProfileSection } from '@/components/settings/profile-section';
@@ -21,6 +22,11 @@ export default function Settings() {
 
       {/* Menu Items */}
       <View className="px-4">
+        {/* Gmail Integration */}
+        <View className="mb-4 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
+          <GmailItem />
+        </View>
+
         {/* General Settings */}
         <View className="mb-4 overflow-hidden rounded-xl border border-neutral-200 dark:border-charcoal-700">
           <LanguageItem />

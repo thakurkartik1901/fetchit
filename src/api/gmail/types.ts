@@ -32,7 +32,7 @@ export type GmailMessage = {
 };
 
 export type GmailListResponse = {
-  messages?: Array<{ id: string; threadId: string }>;
+  messages?: { id: string; threadId: string }[];
   nextPageToken?: string;
   resultSizeEstimate?: number;
 };
@@ -56,7 +56,7 @@ export type ParsedOrder = {
   orderId?: string;
   totalAmount?: string;
   orderDate?: string;
-  items?: Array<{ name: string; quantity?: number; price?: string }>;
+  items?: { name: string; quantity?: number; price?: string }[];
 };
 
 // DTO types for internal use

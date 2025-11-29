@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import type { GmailListResponse } from '../types';
 import { buildPurchasesQuery, listMessages } from '../client';
+import type { GmailListResponse } from '../types';
 
 /**
  * Hook to fetch purchase email IDs with pagination

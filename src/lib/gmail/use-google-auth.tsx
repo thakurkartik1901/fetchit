@@ -1,9 +1,5 @@
-/* eslint-disable max-lines-per-function */
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useState } from 'react';
-
-import type { GmailTokenType } from './utils';
+import { useCallback, useState } from 'react';
 
 // IMPORTANT: Update this URL to your backend URL
 // Development: ngrok URL (e.g., https://abc123.ngrok-free.dev)
@@ -17,68 +13,22 @@ type UseGoogleAuthResult = {
   revokeAccess: () => Promise<void>;
 };
 
-export function useGoogleAuth(
-  onSuccess: (token: GmailTokenType) => void,
-  onError?: (error: string) => void
-): UseGoogleAuthResult {
+/**
+ * Google OAuth Hook
+ *
+ * Simplified hook that only handles opening the OAuth browser flow.
+ * Deep link handling is centralized in src/app/_layout.tsx
+ *
+ * The flow:
+ * 1. User calls promptAsync() -> Opens browser with backend OAuth URL
+ * 2. User completes OAuth in browser
+ * 3. Backend redirects to fetchit://auth/callback with tokens
+ * 4. Deep link router in _layout.tsx handles the callback
+ * 5. handleGmailAuthCallback() processes tokens and calls linkGmail()
+ */
+export function useGoogleAuth(): UseGoogleAuthResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Handle deep link callback from backend
-  const handleDeepLink = useCallback(
-    ({ url }: { url: string }) => {
-      console.log('🔗 Deep link received:', url);
-
-      // Check if this is our auth callback
-      // IMPORTANT: 'fetchit' matches your app scheme from app.config.ts
-      if (url.startsWith('fetchit://auth/callback')) {
-        const params = new URL(url).searchParams;
-
-        const accessToken = params.get('accessToken');
-        const refreshToken = params.get('refreshToken');
-        const expiresIn = params.get('expiresIn');
-
-        if (accessToken) {
-          const token: GmailTokenType = {
-            accessToken,
-            refreshToken: refreshToken || undefined,
-            expiresIn: expiresIn ? parseInt(expiresIn) : undefined,
-            issuedAt: Date.now(),
-            tokenType: 'Bearer',
-            scope: 'https://www.googleapis.com/auth/gmail.readonly',
-          };
-
-          console.log('✅ Received Gmail token from backend');
-          setIsLoading(false);
-          setError(null);
-          onSuccess(token);
-        } else {
-          const errorMsg = 'No access token received';
-          console.error('❌', errorMsg);
-          setError(errorMsg);
-          setIsLoading(false);
-          onError?.(errorMsg);
-        }
-      }
-    },
-    [onSuccess, onError]
-  );
-
-  // Listen for deep link callbacks
-  useEffect(() => {
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-
-    // Check if app was opened with a deep link (cold start)
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        handleDeepLink({ url });
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [handleDeepLink]);
 
   // Start the OAuth flow
   const handlePromptAsync = useCallback(async () => {
@@ -99,15 +49,17 @@ export function useGoogleAuth(
         setIsLoading(false);
         console.log('ℹ️ User dismissed browser');
       }
+
+      // Note: On success, the backend redirects to fetchit://auth/callback
+      // which is handled by the centralized deep link router in _layout.tsx
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage);
       setIsLoading(false);
-      onError?.(errorMessage);
       console.error('❌ Browser error:', errorMessage);
     }
-  }, [onError]);
+  }, []);
 
   const revokeAccess = useCallback(async () => {
     // Implement token revocation if needed

@@ -3,6 +3,7 @@ import '../../global.css';
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React from 'react';
@@ -13,6 +14,12 @@ import { Toaster } from 'sonner-native';
 
 import { APIProvider } from '@/api';
 import { loadSelectedTheme } from '@/lib';
+import {
+  handleGmailAuthCallback,
+  handlePaymentCallback,
+  handleShareCallback,
+} from '@/lib/deep-linking';
+import { hydrateGmail } from '@/lib/gmail';
 import { useThemeConfig } from '@/lib/use-theme-config';
 import { hydrateAuth } from '@/store/auth';
 
@@ -23,6 +30,7 @@ export const unstable_settings = {
 };
 
 hydrateAuth();
+hydrateGmail();
 loadSelectedTheme();
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -33,6 +41,46 @@ SplashScreen.setOptions({
 });
 
 export default function RootLayout() {
+  // Centralized Deep Link Router
+  React.useEffect(() => {
+    /**
+     * Deep Link Router
+     *
+     * Routes incoming deep links to appropriate handlers.
+     * Handlers return true if they processed the link, false otherwise.
+     *
+     * Supported patterns:
+     * - fetchit://auth/callback - Gmail OAuth callback
+     * - fetchit://payment/callback - Payment callback (future)
+     * - fetchit://share/* - Social sharing (future)
+     */
+    const handleDeepLink = ({ url }: { url: string }) => {
+      console.log('🔗 Deep link received:', url);
+
+      // Route to handlers in priority order
+      if (handleGmailAuthCallback(url)) return;
+      if (handlePaymentCallback(url)) return;
+      if (handleShareCallback(url)) return;
+
+      // Unhandled deep link
+      console.warn('⚠️ Unhandled deep link:', url);
+    };
+
+    // Listen for deep links while app is running
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Check if app was opened with a deep link (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink({ url });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <Providers>
       <Stack screenOptions={{ headerShown: false }}>
