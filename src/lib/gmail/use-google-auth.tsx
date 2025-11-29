@@ -44,9 +44,9 @@ export function useGoogleAuth(): UseGoogleAuthResult {
 
       console.log('🌐 Browser result:', result.type);
 
+      setIsLoading(false);
       // If user dismisses the browser without completing auth
       if (result.type === 'dismiss' || result.type === 'cancel') {
-        setIsLoading(false);
         console.log('ℹ️ User dismissed browser');
       }
 
